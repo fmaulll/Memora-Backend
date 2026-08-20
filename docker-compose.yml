@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: memora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: memora
+      POSTGRES_PASSWORD: memora
+      POSTGRES_DB: memora
+    ports:
+      - "5432:5432"
+    volumes:
+      - memora_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  memora_postgres_data:
