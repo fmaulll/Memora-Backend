@@ -1,15 +1,15 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 
 
-class Deck(Base):
-    __tablename__ = "decks"
+class Card(Base):
+    __tablename__ = "cards"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -17,30 +17,31 @@ class Deck(Base):
         default=uuid.uuid4,
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    deck_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("decks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    front: Mapped[str] = mapped_column(
+        Text,
         nullable=False,
     )
 
-    title: Mapped[str] = mapped_column(
-        String(255),
+    back: Mapped[str] = mapped_column(
+        Text,
         nullable=False,
     )
 
-    subject: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
+    front_image_url: Mapped[str | None] = mapped_column(
+        String(1000),
+        nullable=True,
     )
 
-    education_level: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-    )
-
-    is_favorite: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
+    back_image_url: Mapped[str | None] = mapped_column(
+        String(1000),
+        nullable=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -55,8 +56,8 @@ class Deck(Base):
         onupdate=datetime.utcnow,
         nullable=False,
     )
-    cards = relationship(
-        "Card",
-        back_populates="deck",
-        cascade="all, delete-orphan",
+
+    deck = relationship(
+        "Deck",
+        back_populates="cards",
     )
