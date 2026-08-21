@@ -45,35 +45,85 @@ def get_user_deck(
 @router.post(
     "/decks/{deck_id}/cards/bulk",
     response_model=list[CardResponse],
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
-def create_cards_bulk(
+def create_or_update_cards_bulk(
     deck_id: uuid.UUID,
     data: BulkCardCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    get_user_deck(deck_id, current_user, db)
-
-    cards = [
-        Card(
-            id=card.id,
-            deck_id=deck_id,
-            front=card.front,
-            back=card.back,
-            front_image_url=card.front_image_url,
-            back_image_url=card.back_image_url,
+    # Make sure the deck belongs to the current user
+    deck = (
+        db.query(Deck)
+        .filter(
+            Deck.id == deck_id,
+            Deck.user_id == current_user.id,
         )
-        for card in data.cards
-    ]
+        .first()
+    )
 
-    db.add_all(cards)
+    if not deck:
+        raise HTTPException(
+            status_code=404,
+            detail="Deck not found",
+        )
+
+    # Get all existing cards
+    existing_cards = (
+        db.query(Card)
+        .filter(Card.deck_id == deck_id)
+        .all()
+    )
+
+    existing_by_id = {
+        card.id: card
+        for card in existing_cards
+    }
+
+    incoming_ids = set()
+
+    # Insert / update
+    for card_data in data.cards:
+
+        incoming_ids.add(card_data.id)
+
+        existing = existing_by_id.get(card_data.id)
+
+        if existing:
+            # UPDATE
+            existing.front = card_data.front
+            existing.back = card_data.back
+            existing.front_image_url = card_data.front_image_url
+            existing.back_image_url = card_data.back_image_url
+
+        else:
+            # INSERT
+            new_card = Card(
+                id=card_data.id,
+                deck_id=deck_id,
+                front=card_data.front,
+                back=card_data.back,
+                front_image_url=card_data.front_image_url,
+                back_image_url=card_data.back_image_url,
+            )
+
+            db.add(new_card)
+
+    # DELETE cards that no longer exist locally
+    for existing in existing_cards:
+
+        if existing.id not in incoming_ids:
+            db.delete(existing)
+
     db.commit()
 
-    for card in cards:
-        db.refresh(card)
-
-    return cards
+    # Return the current server state
+    return (
+        db.query(Card)
+        .filter(Card.deck_id == deck_id)
+        .all()
+    )
 
 @router.post(
     "/decks/{deck_id}/cards",

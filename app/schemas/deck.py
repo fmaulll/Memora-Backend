@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DeckCreate(BaseModel):
+    id: uuid.UUID
     title: str
     subject: str
     education_level: str

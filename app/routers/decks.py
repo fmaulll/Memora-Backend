@@ -27,7 +27,10 @@ def create_deck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    print("REQUEST ID:", data.id)
+
     deck = Deck(
+        id=data.id,
         user_id=current_user.id,
         title=data.title,
         subject=data.subject,
@@ -35,9 +38,13 @@ def create_deck(
         is_favorite=data.is_favorite,
     )
 
+    print("MODEL ID BEFORE DB:", deck.id)
+
     db.add(deck)
     db.commit()
     db.refresh(deck)
+
+    print("MODEL ID AFTER DB:", deck.id)
 
     return deck
 
