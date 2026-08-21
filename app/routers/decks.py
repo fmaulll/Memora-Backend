@@ -4,22 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.models.deck import Deck
-from app.schemas.deck import DeckCreate, DeckResponse, DeckUpdate
-
-from app.core.auth import get_current_user
 from app.models.user import User
+from app.schemas.deck import DeckCreate, DeckResponse, DeckUpdate
 
 
 router = APIRouter(
     prefix="/decks",
     tags=["Decks"],
 )
-
-
-# Temporary development user.
-# We will replace this with the authenticated user later.
 
 
 @router.post(
