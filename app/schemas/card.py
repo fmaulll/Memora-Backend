@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class CardCreate(BaseModel):
-    id: uuid.UUID
+    id: uuid.UUID | None = None
     front: str
     back: str
     front_image_url: str | None = None

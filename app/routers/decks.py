@@ -36,6 +36,7 @@ def create_deck(
         subject=data.subject,
         education_level=data.education_level,
         is_favorite=data.is_favorite,
+        parent_deck_id=data.parent_deck_id,
     )
 
     print("MODEL ID BEFORE DB:", deck.id)
