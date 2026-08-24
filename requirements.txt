@@ -8,3 +8,4 @@ alembic
 python-jose[cryptography]
 bcrypt
 email-validator
+google-genai
