@@ -4,6 +4,7 @@ from app.db.database import Base, engine
 from app.routers.auth import router as auth_router
 from app.routers.decks import router as deck_router
 from app.routers.cards import router as card_router
+from app.routers.ai import router as ai_router
 
 # Import models so SQLAlchemy knows about them
 from app.models.user import User
@@ -19,6 +20,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(deck_router)
 app.include_router(card_router)
+app.include_router(ai_router)
 
 @app.get("/health")
 def health_check():

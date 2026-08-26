@@ -18,6 +18,7 @@ class DeckUpdate(BaseModel):
     subject: str | None = None
     education_level: str | None = None
     is_favorite: bool | None = None
+    parent_deck_id: uuid.UUID | None = None
 
 class DeckResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
