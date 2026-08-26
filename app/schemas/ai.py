@@ -2,15 +2,17 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class DeckPlanRequest(BaseModel):
-    topic: str = Field(min_length=1)
-    education_level: str = Field(min_length=1)
-    study_goal: str = Field(min_length=1)
-    card_count: int = Field(ge=1, le=100)
+    topic: str
+    education_level: str
+    study_goal: str
+    learning_depth: str
 
 
 class ChapterPlan(BaseModel):
-    title: str = Field(min_length=1)
-    card_count: int = Field(ge=1)
+    title: str
+    description: str
+    key_concepts: list[str]
+    card_count: int
 
 
 class DeckPlanResponse(BaseModel):

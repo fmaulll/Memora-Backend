@@ -4,6 +4,7 @@ from app.schemas.ai import (
     DeckPlanRequest,
     DeckPlanResponse,
     GeneratedDeckResponse,
+    GeneratedChapter,
 )
 
 
@@ -12,13 +13,95 @@ class GeminiService:
     def __init__(self):
         self.client = genai.Client()
 
+    async def generate_chapter(
+        self,
+        plan: DeckPlanResponse,
+        chapter,
+    ) -> GeneratedChapter:
+
+        key_concepts = "\n".join(
+            f"- {concept}"
+            for concept in chapter.key_concepts
+        )
+
+        prompt = f"""
+            Create flashcards for one chapter of a learning deck.
+
+            Deck title:
+            {plan.title}
+
+            Subject:
+            {plan.subject}
+
+            Education level:
+            {plan.education_level}
+
+            Chapter:
+            {chapter.title}
+
+            Chapter description:
+            {chapter.description}
+
+            Key concepts that must be covered:
+            {key_concepts}
+
+            Required number of cards:
+            {chapter.card_count}
+
+            Requirements:
+
+            - Generate exactly {chapter.card_count} flashcards.
+            - The chapter MUST contain exactly {chapter.card_count} cards.
+            - Cover all important key concepts.
+            - Distribute cards according to the importance and complexity
+            of each concept.
+            - Do not create redundant cards simply to reach the required count.
+            - Adapt the difficulty to the education level.
+            - Each flashcard must test one clear concept.
+            - The front should contain a clear question or prompt.
+            - The back should contain an accurate, concise answer.
+            - Avoid duplicate questions.
+            - Avoid asking essentially the same question in different wording.
+            - Do not include information unrelated to this chapter.
+            - Return only the requested structured output.
+        """
+
+        response = self.client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": GeneratedChapter,
+            },
+        )
+
+        generated = GeneratedChapter.model_validate_json(
+            response.text
+        )
+
+        if generated.title != chapter.title:
+            raise ValueError(
+                f"Chapter mismatch: "
+                f"expected '{chapter.title}', "
+                f"got '{generated.title}'"
+            )
+
+        if len(generated.cards) != chapter.card_count:
+            raise ValueError(
+                f"Chapter '{chapter.title}' generated "
+                f"{len(generated.cards)} cards, "
+                f"expected {chapter.card_count}"
+            )
+
+        return generated
+
     async def generate_deck_plan(
         self,
         request: DeckPlanRequest,
     ) -> DeckPlanResponse:
 
         prompt = f"""
-            Create a learning plan for a flashcard deck.
+            Create a comprehensive learning plan for a flashcard deck.
 
             Topic:
             {request.topic}
@@ -29,19 +112,49 @@ class GeminiService:
             Study goal:
             {request.study_goal}
 
-            Requested number of flashcards:
-            {request.card_count}
+            Learning depth:
+            {request.learning_depth}
+
+            Your task is to design the curriculum first and determine how many
+            flashcards are necessary to adequately cover the important knowledge
+            within each chapter.
+
+            
 
             Requirements:
 
-            - Create a logical learning progression.
+            - Create a logical learning progression from foundational concepts to more advanced concepts.
+            - Order chapters so that prerequisites are introduced before concepts that depend on them.
             - Adapt the difficulty to the education level.
             - Adapt the curriculum to the study goal.
+            - Adapt the amount of content to the requested learning depth.
             - Divide the topic into meaningful chapters.
-            - Distribute exactly {request.card_count} flashcards across the chapters.
             - Do not create unnecessary chapters.
-            - Each chapter must contain at least 1 flashcard.
+
+            For every chapter:
+
+            - Provide a clear and specific chapter title.
+            - Provide a concise description explaining what the learner will learn.
+            - Provide a list of the key concepts that must be covered in the chapter.
+            - Determine the appropriate number of flashcards based on the breadth and complexity of those key concepts.
+            - Ensure the card count is sufficient to properly cover the important knowledge in the chapter.
+            - Do not force every chapter to have the same number of flashcards.
+            - Simple chapters may require fewer flashcards.
+            - Broad or concept-heavy chapters may require significantly more flashcards.
+
+            Flashcard quantity:
+
+            - Do not distribute a fixed number of flashcards across chapters.
+            - Do not artificially limit chapters to a small number of cards.
+            - Do not create redundant concepts simply to increase the card count.
+            - Each chapter should normally contain between 3 and 60 flashcards.
+            - The total deck should normally remain below 300 flashcards.
+            - These are safety limits, not targets.
+
+            Output:
+
             - Return only the requested structured output.
+            - Every chapter must contain its title, description, key concepts, and estimated card count.
         """
 
         response = self.client.models.generate_content(
@@ -57,17 +170,6 @@ class GeminiService:
             response.text
         )
 
-        total_cards = sum(
-            chapter.card_count
-            for chapter in plan.chapters
-        )
-
-        if total_cards != request.card_count:
-            raise ValueError(
-                f"AI generated {total_cards} cards, "
-                f"but {request.card_count} were requested"
-            )
-
         return plan
 
     async def generate_deck(
@@ -75,77 +177,21 @@ class GeminiService:
         plan: DeckPlanResponse,
     ) -> GeneratedDeckResponse:
 
-        chapter_requirements = "\n".join(
-            f"- {chapter.title}: exactly {chapter.card_count} cards"
-            for chapter in plan.chapters
-        )
+        generated_chapters = []
 
-        prompt = f"""
-            Create flashcards for a learning deck.
-
-            Deck title:
-            {plan.title}
-
-            Subject:
-            {plan.subject}
-
-            Education level:
-            {plan.education_level}
-
-            Chapters and required card counts:
-            {chapter_requirements}
-
-            Requirements:
-
-            - Generate exactly the requested number of cards for every chapter.
-            - Every chapter must contain exactly its requested card count.
-            - Follow the chapter order.
-            - Cover the chapter's important concepts.
-            - Adapt the difficulty to the education level.
-            - Each flashcard must test one clear concept.
-            - The front should contain a clear question or prompt.
-            - The back should contain an accurate, concise answer.
-            - Avoid duplicate questions.
-            - Do not include information unrelated to the chapter.
-            - Do not add or remove chapters.
-            - Return only the requested structured output.
-        """
-
-        response = self.client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": GeneratedDeckResponse,
-            },
-        )
-
-        deck = GeneratedDeckResponse.model_validate_json(
-            response.text
-        )
-
-        if len(deck.chapters) != len(plan.chapters):
-            raise ValueError(
-                "AI generated an unexpected number of chapters"
+        for chapter in plan.chapters:
+            generated_chapter = await self.generate_chapter(
+                plan,
+                chapter,
             )
 
-        for expected, generated in zip(
-            plan.chapters,
-            deck.chapters,
-        ):
-            if expected.title != generated.title:
-                raise ValueError(
-                    f"Chapter mismatch: "
-                    f"expected '{expected.title}', "
-                    f"got '{generated.title}'"
-                )
+            generated_chapters.append(
+                generated_chapter
+            )
 
-            if len(generated.cards) != expected.card_count:
-                raise ValueError(
-                    f"Chapter '{expected.title}' generated "
-                    f"{len(generated.cards)} cards, "
-                    f"expected {expected.card_count}"
-                )
-
-        return deck
-        
+        return GeneratedDeckResponse(
+            title=plan.title,
+            subject=plan.subject,
+            education_level=plan.education_level,
+            chapters=generated_chapters,
+        )
