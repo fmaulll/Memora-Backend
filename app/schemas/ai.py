@@ -33,6 +33,10 @@ class GeneratedCard(BaseModel):
     back: str = Field(min_length=1)
 
 
+class GeneratedChapterCards(BaseModel):
+    cards: list[GeneratedCard]
+
+
 class GeneratedChapter(BaseModel):
     title: str = Field(min_length=1)
     cards: list[GeneratedCard]

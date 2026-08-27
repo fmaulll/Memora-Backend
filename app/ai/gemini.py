@@ -5,6 +5,7 @@ from app.schemas.ai import (
     DeckPlanResponse,
     GeneratedDeckResponse,
     GeneratedChapter,
+    GeneratedChapterCards,
 )
 
 
@@ -71,29 +72,25 @@ class GeminiService:
             contents=prompt,
             config={
                 "response_mime_type": "application/json",
-                "response_schema": GeneratedChapter,
+                "response_schema": GeneratedChapterCards,
             },
         )
 
-        generated = GeneratedChapter.model_validate_json(
+        generated_cards = GeneratedChapterCards.model_validate_json(
             response.text
         )
 
-        if generated.title != chapter.title:
-            raise ValueError(
-                f"Chapter mismatch: "
-                f"expected '{chapter.title}', "
-                f"got '{generated.title}'"
-            )
-
-        if len(generated.cards) != chapter.card_count:
+        if len(generated_cards.cards) != chapter.card_count:
             raise ValueError(
                 f"Chapter '{chapter.title}' generated "
                 f"{len(generated.cards)} cards, "
                 f"expected {chapter.card_count}"
             )
 
-        return generated
+        return GeneratedChapter(
+            title=chapter.title,
+            cards=generated_cards.cards,
+        )
 
     async def generate_deck_plan(
         self,
