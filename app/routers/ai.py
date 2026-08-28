@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-# from app.ai.deepseek import DeepSeekService
+from app.ai.deepseek import DeepSeekService
 from app.ai.gemini import GeminiService
 from app.schemas.ai import DeckPlanRequest, DeckPlanResponse, GeneratedDeckResponse
 
@@ -18,8 +18,8 @@ router = APIRouter(
 async def generate_deck_plan(
     request: DeckPlanRequest,
 ):
-    service = GeminiService()
-    # service = DeepSeekService()
+    # service = GeminiService()
+    service = DeepSeekService()
 
     return await service.generate_deck_plan(request)
 
@@ -30,7 +30,7 @@ async def generate_deck_plan(
 async def generate_deck(
     plan: DeckPlanResponse,
 ):
-    service = GeminiService()
-    # service = DeepSeekService()
+    # service = GeminiService()
+    service = DeepSeekService()
 
     return await service.generate_deck(plan)
