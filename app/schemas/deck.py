@@ -11,6 +11,7 @@ class DeckCreate(BaseModel):
     education_level: str
     is_favorite: bool = False
     parent_deck_id: uuid.UUID | None = None
+    generation_status: str = "completed"
 
 
 class DeckUpdate(BaseModel):
@@ -33,5 +34,19 @@ class DeckResponse(BaseModel):
     education_level: str
     is_favorite: bool
 
+    generation_status: str
+
     created_at: datetime
     updated_at: datetime
+
+class ChapterGenerationStatus(BaseModel):
+    id: uuid.UUID
+    title: str
+    generation_status: str
+    card_count: int
+
+
+class DeckGenerationStatusResponse(BaseModel):
+    deck_id: uuid.UUID
+    generation_status: str
+    chapters: list[ChapterGenerationStatus]

@@ -144,17 +144,54 @@ class DeepSeekService:
             Education level:
             {request.education_level}
 
+            Study purpose:
+            {request.study_purpose}
+
             Study goal:
             {request.study_goal}
 
             Learning depth:
             {request.learning_depth}
 
+            Target date:
+            {request.target_date if request.target_date else "No target date provided"}
+
             Your task is to design the curriculum first and determine how many
             flashcards are necessary to adequately cover the important knowledge
             within each chapter.
 
-            
+            The curriculum must be adapted to the user's study purpose.
+
+            Study purpose guidance:
+
+            - If the purpose is "Learn from Scratch", prioritize strong foundational
+            understanding and logical progression from beginner concepts.
+
+            - If the purpose is "Expand My Knowledge", focus on broadening and
+            deepening the user's understanding of the topic.
+
+            - If the purpose is "Prepare for an Exam", prioritize concepts that are
+            important for exam preparation and ensure the curriculum efficiently
+            covers the required knowledge.
+
+            - If the purpose is "Prepare for a Certification", prioritize knowledge,
+            concepts, terminology, and practical understanding relevant to the
+            certification goal.
+
+            Target date guidance:
+
+            - If a target date is provided, consider the available preparation time
+            when designing the learning plan.
+            - The deck should remain realistic to study before the target date.
+            - Do not unnecessarily reduce important knowledge just to fit the deadline.
+            - Instead, prioritize the most important concepts when the available
+            preparation time is limited.
+            - If no target date is provided, create the curriculum based primarily
+            on the requested learning depth and study purpose.
+
+            Your task is to design the curriculum first and determine how many
+            flashcards are necessary to adequately cover the important knowledge
+            within each chapter.
 
             Requirements:
 
@@ -162,6 +199,7 @@ class DeepSeekService:
             - Order chapters so that prerequisites are introduced before concepts that depend on them.
             - Adapt the difficulty to the education level.
             - Adapt the curriculum to the study goal.
+            - Adapt the curriculum to the study purpose.
             - Adapt the amount of content to the requested learning depth.
             - Divide the topic into meaningful chapters.
             - Do not create unnecessary chapters.

@@ -1,14 +1,21 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.db.database import get_db
+from app.models.card import Card
 from app.models.deck import Deck
 from app.models.user import User
-from app.schemas.deck import DeckCreate, DeckResponse, DeckUpdate
+from app.schemas.deck import (
+    ChapterGenerationStatus,
+    DeckCreate,
+    DeckGenerationStatusResponse,
+    DeckResponse,
+    DeckUpdate,
+)
 
 
 router = APIRouter(
@@ -110,6 +117,62 @@ def get_decks(
 
     return db.scalars(statement).all()
 
+@router.get(
+    "/{deck_id}/generation-status",
+    response_model=DeckGenerationStatusResponse,
+)
+def get_generation_status(
+    deck_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Get parent deck
+    parent_deck = db.scalar(
+        select(Deck).where(
+            Deck.id == deck_id,
+            Deck.user_id == current_user.id,
+        )
+    )
+
+    if parent_deck is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Deck not found",
+        )
+
+    # Get child chapter decks
+    chapters = db.scalars(
+        select(Deck)
+        .where(
+            Deck.parent_deck_id == parent_deck.id,
+            Deck.user_id == current_user.id,
+        )
+        .order_by(Deck.created_at.asc())
+    ).all()
+
+    chapter_statuses = []
+
+    for chapter in chapters:
+        card_count = db.scalar(
+            select(func.count())
+            .select_from(Card)
+            .where(Card.deck_id == chapter.id)
+        )
+
+        chapter_statuses.append(
+            ChapterGenerationStatus(
+                id=chapter.id,
+                title=chapter.title,
+                generation_status=chapter.generation_status,
+                card_count=card_count or 0,
+            )
+        )
+
+    return DeckGenerationStatusResponse(
+        deck_id=parent_deck.id,
+        generation_status=parent_deck.generation_status,
+        chapters=chapter_statuses,
+    )
 
 @router.get(
     "/{deck_id}",

@@ -1,11 +1,15 @@
 from pydantic import BaseModel, Field, model_validator
+from datetime import date
+import uuid
 
 
 class DeckPlanRequest(BaseModel):
     topic: str
     education_level: str
+    study_purpose: str
     study_goal: str
     learning_depth: str
+    target_date: date | None = None
 
 
 class ChapterPlan(BaseModel):
@@ -47,3 +51,42 @@ class GeneratedDeckResponse(BaseModel):
     subject: str = Field(min_length=1)
     education_level: str = Field(min_length=1)
     chapters: list[GeneratedChapter]
+
+
+class StudyDay(BaseModel):
+    day: int
+    date: date
+    new_cards: int
+    focus: str
+
+
+class StudyTimeline(BaseModel):
+    total_days: int
+    total_cards: int
+    daily_plan: list[StudyDay]
+
+
+class GeneratedChapterStatus(BaseModel):
+    id: uuid.UUID
+    title: str
+    generation_status: str
+
+
+
+class GeneratedDeckStatus(BaseModel):
+    id: uuid.UUID
+    title: str
+    subject: str
+    education_level: str
+    generation_status: str
+
+    chapters: list[GeneratedChapterStatus]
+
+class GeneratedDeckWithTimelineResponse(BaseModel):
+    deck: GeneratedDeckStatus
+    timeline: StudyTimeline | None = None
+
+class GenerateDeckRequest(BaseModel):
+    plan: DeckPlanResponse
+    study_purpose: str
+    target_date: date | None = None

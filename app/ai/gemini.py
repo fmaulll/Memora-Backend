@@ -106,27 +106,75 @@ class GeminiService:
             Education level:
             {request.education_level}
 
+            Study purpose:
+            {request.study_purpose}
+
             Study goal:
             {request.study_goal}
 
             Learning depth:
             {request.learning_depth}
 
+            Target date:
+            {request.target_date if request.target_date else "No target date provided"}
+
             Your task is to design the curriculum first and determine how many
             flashcards are necessary to adequately cover the important knowledge
             within each chapter.
 
-            
+            The curriculum must be adapted to the user's study purpose.
+
+            Study purpose guidance:
+
+            - If the purpose is "Learn from Scratch", prioritize strong foundational
+            understanding and logical progression from beginner concepts.
+
+            - If the purpose is "Expand My Knowledge", focus on broadening and
+            deepening the user's understanding of the topic.
+
+            - If the purpose is "Prepare for an Exam", prioritize concepts that are
+            important for exam preparation and ensure the curriculum efficiently
+            covers the required knowledge.
+
+            - If the purpose is "Prepare for a Certification", prioritize knowledge,
+            concepts, terminology, and practical understanding relevant to the
+            certification goal.
+
+            Target date guidance:
+
+            - If a target date is provided, consider the available preparation time
+            when designing the learning plan.
+            - The deck should remain realistic to study before the target date.
+            - Do not unnecessarily reduce important knowledge just to fit the deadline.
+            - Instead, prioritize the most important concepts when the available
+            preparation time is limited.
+            - If no target date is provided, create the curriculum based primarily
+            on the requested learning depth and study purpose.
 
             Requirements:
 
-            - Create a logical learning progression from foundational concepts to more advanced concepts.
-            - Order chapters so that prerequisites are introduced before concepts that depend on them.
+            - Create a logical learning progression from foundational concepts to
+            more advanced concepts.
             - Adapt the difficulty to the education level.
+            - Adapt the curriculum to the study purpose.
             - Adapt the curriculum to the study goal.
             - Adapt the amount of content to the requested learning depth.
             - Divide the topic into meaningful chapters.
             - Do not create unnecessary chapters.
+            - Each chapter must contain enough flashcards to properly cover its
+            important concepts.
+            - Do not force every chapter to have the same number of flashcards.
+            - Simple chapters may require fewer flashcards.
+            - Broad or concept-heavy chapters may require significantly more flashcards.
+            - Determine the appropriate flashcard count for each chapter based on
+            the amount of knowledge that should be covered.
+            - Avoid artificially limiting chapters to a small fixed number of cards.
+            - Avoid creating redundant flashcards just to increase the card count.
+            - Each chapter should normally contain between 3 and 60 flashcards.
+            - The total deck should normally remain below 300 flashcards.
+            - These are safety limits, not targets.
+            - Do not add cards simply to reach a limit.
+            - Return only the requested structured output.
 
             For every chapter:
 

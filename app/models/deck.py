@@ -50,6 +50,12 @@ class Deck(Base):
         nullable=False,
     )
 
+    generation_status: Mapped[str] = mapped_column(
+        String(20),
+        default="completed",
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=datetime.utcnow,
