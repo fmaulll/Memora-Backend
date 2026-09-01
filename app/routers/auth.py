@@ -11,17 +11,57 @@ from app.core.security import (
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.auth import (
+    AnonymousUserRequest,
+    AuthResponse,
     LoginRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
 )
+import uuid
 
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
 )
+
+@router.post(
+    "/anonymous",
+    response_model=AuthResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_anonymous_user(
+    data: AnonymousUserRequest,
+    db: Session = Depends(get_db),
+):
+    user_id = uuid.uuid4()
+
+    anonymous_email = (
+        f"anonymous-{user_id}@memoraapp.com"
+    )
+
+    user = User(
+        id=user_id,
+        name=data.name,
+        email=anonymous_email,
+        password_hash=hash_password(
+            str(uuid.uuid4())
+        ),
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token(
+        str(user.id)
+    )
+
+    return AuthResponse(
+        user=user,
+        access_token=token,
+    )
 
 
 @router.post(
