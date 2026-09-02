@@ -7,9 +7,14 @@ class DeckPlanRequest(BaseModel):
     topic: str
     education_level: str
     study_purpose: str
-    study_goal: str
-    learning_depth: str
+
+    preparation_details: str | None = None
+
     target_date: date | None = None
+
+    study_material_ids: list[uuid.UUID] = Field(
+        default_factory=list
+    )
 
 
 class ChapterPlan(BaseModel):

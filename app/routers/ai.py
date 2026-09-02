@@ -1,4 +1,11 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import (
+    APIRouter,
+    Depends,
+    BackgroundTasks,
+    UploadFile,
+    File,
+    HTTPException,
+)
 
 from app.services.deck_generation import DeckGenerationService
 
@@ -12,7 +19,18 @@ from app.schemas.ai import (
     GeneratedDeckStatus,
     GeneratedChapterStatus,
 )
+from app.schemas.study_material import (
+    StudyMaterialResponse,
+    StudyMaterialUploadResponse,
+)
 
+from app.services.study_material import (
+    StudyMaterialService,
+)
+
+from app.models.study_material import StudyMaterial
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -20,6 +38,9 @@ from app.db.database import get_db
 from app.models.deck import Deck
 from app.models.user import User
 
+from pathlib import Path
+
+from app.services.study_timeline import StudyTimelineService
 
 router = APIRouter(
     prefix="/ai",
@@ -33,13 +54,39 @@ router = APIRouter(
 )
 async def generate_deck_plan(
     request: DeckPlanRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    # service = GeminiService()
+    materials = []
+
+    if request.study_material_ids:
+
+        materials = db.scalars(
+            select(StudyMaterial).where(
+                StudyMaterial.id.in_(
+                    request.study_material_ids
+                ),
+                StudyMaterial.user_id
+                == current_user.id,
+            )
+        ).all()
+
+    if len(materials) != len(
+        request.study_material_ids
+    ):
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "One or more study materials were not found."
+            ),
+        )
+
     service = DeepSeekService()
 
-    return await service.generate_deck_plan(request)
-
-from app.services.study_timeline import StudyTimelineService
+    return await service.generate_deck_plan(
+        request,
+        materials=materials,
+    )
 
 
 @router.post(
@@ -89,6 +136,7 @@ async def generate_deck(
     )
 
     # Generate timeline immediately
+
     timeline_service = StudyTimelineService()
 
     timeline = timeline_service.generate(
@@ -130,4 +178,75 @@ async def generate_deck(
             ],
         ),
         timeline=timeline,
+    )
+
+@router.post(
+    "/study-materials",
+    response_model=StudyMaterialUploadResponse,
+)
+async def upload_study_materials(
+    files: list[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    allowed_content_types = {
+        "application/pdf",
+        "text/plain",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    }
+
+    study_material_service = StudyMaterialService()
+
+    materials = []
+
+    for file in files:
+
+        filename = file.filename or ""
+
+        extension = Path(filename).suffix.lower()
+
+        allowed_extensions = {
+            ".pdf",
+            ".txt",
+            ".docx",
+            ".pptx",
+        }
+
+        if extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {filename}",
+            )
+
+        extracted_text = (
+            await study_material_service.extract_text(
+                file
+            )
+        )
+
+        study_material = StudyMaterial(
+            user_id=current_user.id,
+            filename=file.filename or "Untitled",
+            content_type=file.content_type,
+            extracted_text=extracted_text,
+        )
+
+        db.add(study_material)
+
+        materials.append(study_material)
+
+    db.commit()
+
+    for material in materials:
+        db.refresh(material)
+
+    return StudyMaterialUploadResponse(
+        materials=[
+            StudyMaterialResponse(
+                id=material.id,
+                filename=material.filename,
+            )
+            for material in materials
+        ]
     )

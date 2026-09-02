@@ -10,3 +10,7 @@ bcrypt
 email-validator
 google-genai
 openai
+pypdf
+python-docx
+python-pptx
+python-multipart

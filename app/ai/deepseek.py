@@ -3,6 +3,7 @@ import json
 import asyncio
 
 from openai import OpenAI
+from app.models.study_material import StudyMaterial
 
 from app.schemas.ai import (
     ChapterPlan,
@@ -133,10 +134,30 @@ class DeepSeekService:
     async def generate_deck_plan(
         self,
         request: DeckPlanRequest,
+        materials: list[StudyMaterial] | None = None,
     ) -> DeckPlanResponse:
 
+        material_section = ""
+
+        if materials:
+            material_text = "\n\n".join(
+                f"Source: {material.filename}\n"
+                f"{material.extracted_text}"
+                for material in materials
+            )
+
+            material_section = f"""
+        STUDY MATERIALS PROVIDED BY THE USER:
+
+        {material_text}
+
+        IMPORTANT:
+        - Use these materials as supplemental context.
+        - Prioritize relevant information from these materials.
+        - Do not mention the uploaded files in the generated response.
+        """
         prompt = f"""
-            Create a comprehensive learning plan for a flashcard deck.
+            Create a high-quality learning plan for a flashcard deck.
 
             Topic:
             {request.topic}
@@ -147,106 +168,108 @@ class DeepSeekService:
             Study purpose:
             {request.study_purpose}
 
-            Study goal:
-            {request.study_goal}
-
-            Learning depth:
-            {request.learning_depth}
+            Additional preparation details:
+            {request.preparation_details}
 
             Target date:
-            {request.target_date if request.target_date else "No target date provided"}
+            {
+                request.target_date
+                if request.target_date
+                else "No target date provided"
+            }
 
-            Your task is to design the curriculum first and determine how many
-            flashcards are necessary to adequately cover the important knowledge
-            within each chapter.
+            {material_section}
 
-            The curriculum must be adapted to the user's study purpose.
+            Your task is to design the curriculum and determine
+            how many flashcards are necessary to adequately cover
+            the important knowledge within each chapter.
 
             Study purpose guidance:
 
-            - If the purpose is "Learn from Scratch", prioritize strong foundational
-            understanding and logical progression from beginner concepts.
+            - If the purpose is "Learn from Scratch", prioritize
+            strong foundational understanding and a logical
+            progression from beginner concepts.
 
-            - If the purpose is "Expand My Knowledge", focus on broadening and
-            deepening the user's understanding of the topic.
+            - If the purpose is "Expand My Knowledge", focus on
+            broadening and deepening understanding beyond the basics.
 
-            - If the purpose is "Prepare for an Exam", prioritize concepts that are
-            important for exam preparation and ensure the curriculum efficiently
-            covers the required knowledge.
+            - If the purpose is "Prepare for an Exam", prioritize
+            concepts most likely to be important for examination
+            and ensure efficient coverage of required knowledge.
 
-            - If the purpose is "Prepare for a Certification", prioritize knowledge,
-            concepts, terminology, and practical understanding relevant to the
-            certification goal.
+            - If the purpose is "Prepare for a Certification",
+            prioritize certification-relevant concepts,
+            terminology, and practical understanding.
+
+            - If the purpose is "Career", prioritize practical,
+            job-relevant knowledge and concepts that are useful
+            in real-world work.
 
             Target date guidance:
 
-            - If a target date is provided, consider the available preparation time
-            when designing the learning plan.
-            - The deck should remain realistic to study before the target date.
-            - Do not unnecessarily reduce important knowledge just to fit the deadline.
-            - Instead, prioritize the most important concepts when the available
-            preparation time is limited.
-            - If no target date is provided, create the curriculum based primarily
-            on the requested learning depth and study purpose.
-
-            Your task is to design the curriculum first and determine how many
-            flashcards are necessary to adequately cover the important knowledge
-            within each chapter.
+            - If a target date is provided, consider the available
+            preparation time.
+            - Prioritize the most important knowledge when time
+            is limited.
+            - Do not unnecessarily remove important knowledge
+            solely to fit a deadline.
+            - The curriculum should remain realistic to study
+            before the target date.
 
             Requirements:
 
-            - Create a logical learning progression from foundational concepts to more advanced concepts.
-            - Order chapters so that prerequisites are introduced before concepts that depend on them.
-            - Adapt the difficulty to the education level.
-            - Adapt the curriculum to the study goal.
+            - Create a logical learning progression from foundational
+            concepts to more advanced concepts.
+            - Introduce prerequisites before dependent concepts.
+            - Adapt difficulty to the education level.
             - Adapt the curriculum to the study purpose.
-            - Adapt the amount of content to the requested learning depth.
+            - Use preparation details when relevant.
+            - Use provided study materials as supplemental context.
             - Divide the topic into meaningful chapters.
             - Do not create unnecessary chapters.
+            - Do not create duplicate chapters.
 
             For every chapter:
 
             - Provide a clear and specific chapter title.
-            - Provide a concise description explaining what the learner will learn.
-            - Provide a list of the key concepts that must be covered in the chapter.
-            - Determine the appropriate number of flashcards based on the breadth and complexity of those key concepts.
-            - Ensure the card count is sufficient to properly cover the important knowledge in the chapter.
-            - Do not force every chapter to have the same number of flashcards.
-            - Simple chapters may require fewer flashcards.
-            - Broad or concept-heavy chapters may require significantly more flashcards.
+            - Provide a concise description explaining what the
+            learner will learn.
+            - Provide a list of important key concepts.
+            - Determine an appropriate number of flashcards based
+            on breadth and complexity.
+            - Do not force every chapter to have the same number
+            of flashcards.
 
             Flashcard quantity:
 
-            - Do not distribute a fixed number of flashcards across chapters.
-            - Do not artificially limit chapters to a small number of cards.
-            - Do not create redundant concepts simply to increase the card count.
-            - Each chapter should normally contain between 3 and 60 flashcards.
-            - The total deck should normally remain below 300 flashcards.
+            - Simple chapters may require fewer flashcards.
+            - Broad or concept-heavy chapters may require more.
+            - Each chapter should normally contain between
+            3 and 60 flashcards.
+            - The total deck should normally remain below
+            300 flashcards.
             - These are safety limits, not targets.
-
-            Output:
-
-            - Return only the requested structured output.
-            - Every chapter must contain its title, description, key concepts, and estimated card count.
+            - Do not create redundant concepts simply to increase
+            the card count.
 
             Return valid JSON only.
 
             The JSON must have this structure:
 
             {{
-            "title": "string",
-            "subject": "string",
-            "education_level": "string",
-            "chapters": [
-                {{
                 "title": "string",
-                "description": "string",
-                "key_concepts": [
-                    "string"
-                ],
-                "card_count": 10
-                }}
-            ]
+                "subject": "string",
+                "education_level": "string",
+                "chapters": [
+                    {{
+                        "title": "string",
+                        "description": "string",
+                        "key_concepts": [
+                            "string"
+                        ],
+                        "card_count": 10
+                    }}
+                ]
             }}
         """
 
@@ -307,3 +330,52 @@ class DeepSeekService:
             education_level=plan.education_level,
             chapters=generated_chapters,
         )
+
+    def _build_material_context(
+        self,
+        materials: list[StudyMaterial] | None,
+        max_chars_per_material: int = 12_000,
+        max_total_chars: int = 30_000,
+    ) -> str:
+
+        if not materials:
+            return ""
+
+        sections = []
+        total_chars = 0
+
+        for material in materials:
+
+            text = material.extracted_text.strip()
+
+            if not text:
+                continue
+
+            remaining_chars = (
+                max_total_chars - total_chars
+            )
+
+            if remaining_chars <= 0:
+                break
+
+            allowed_chars = min(
+                max_chars_per_material,
+                remaining_chars,
+            )
+
+            truncated_text = text[:allowed_chars]
+
+            section = f"""
+    Study material: {material.filename}
+
+    {truncated_text}
+    """
+
+            sections.append(section)
+
+            total_chars += len(truncated_text)
+
+        if not sections:
+            return ""
+
+        return "\n\n".join(sections)

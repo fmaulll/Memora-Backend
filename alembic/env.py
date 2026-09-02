@@ -11,6 +11,7 @@ from app.db.database import Base, settings
 from app.models.user import User
 from app.models.deck import Deck
 from app.models.card import Card
+from app.models.study_material import StudyMaterial
 
 
 config = context.config
