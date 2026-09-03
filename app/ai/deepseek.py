@@ -45,6 +45,9 @@ class DeepSeekService:
             Education level:
             {plan.education_level}
 
+            Learning language:
+            {plan.learning_language}
+
             Chapter:
             {chapter.title}
 
@@ -71,6 +74,7 @@ class DeepSeekService:
             - Do not return the chapter title.
             - Do not return the deck title.
             - Do not return any metadata.
+            - The flashcards must be written in the specified learning language.
 
             Return valid JSON only.
 
@@ -162,6 +166,9 @@ class DeepSeekService:
             Topic:
             {request.topic}
 
+            Learning language:
+            {request.learning_language}
+
             Education level:
             {request.education_level}
 
@@ -183,6 +190,10 @@ class DeepSeekService:
             Your task is to design the curriculum and determine
             how many flashcards are necessary to adequately cover
             the important knowledge within each chapter.
+
+            Learning language guidance:
+            - The deck must be written in the specified learning language.
+            - The flashcards must be written in the specified learning language.
 
             Study purpose guidance:
 
@@ -260,6 +271,7 @@ class DeepSeekService:
                 "title": "string",
                 "subject": "string",
                 "education_level": "string",
+                "learning_language": "string",
                 "chapters": [
                     {{
                         "title": "string",

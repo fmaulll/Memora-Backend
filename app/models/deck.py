@@ -2,7 +2,7 @@ import uuid
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +40,11 @@ class Deck(Base):
     )
 
     education_level: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    learning_language: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
     )

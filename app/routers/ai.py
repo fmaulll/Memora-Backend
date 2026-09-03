@@ -107,6 +107,7 @@ async def generate_deck(
         title=plan.title,
         subject=plan.subject,
         education_level=plan.education_level,
+        learning_language=plan.learning_language,
         generation_status="generating",
     )
 
@@ -123,6 +124,7 @@ async def generate_deck(
             title=chapter.title,
             subject=plan.subject,
             education_level=plan.education_level,
+            learning_language=plan.learning_language,
             generation_status="pending",
         )
 
@@ -167,6 +169,7 @@ async def generate_deck(
             title=parent_deck.title,
             subject=parent_deck.subject,
             education_level=parent_deck.education_level,
+            learning_language=parent_deck.learning_language,
             generation_status=parent_deck.generation_status,
             chapters=[
                 GeneratedChapterStatus(

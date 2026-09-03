@@ -7,6 +7,7 @@ class DeckPlanRequest(BaseModel):
     topic: str
     education_level: str
     study_purpose: str
+    learning_language: str
 
     preparation_details: str | None = None
 
@@ -28,6 +29,7 @@ class DeckPlanResponse(BaseModel):
     title: str = Field(min_length=1)
     subject: str = Field(min_length=1)
     education_level: str = Field(min_length=1)
+    learning_language: str = Field(min_length=1)
     chapters: list[ChapterPlan]
 
     @model_validator(mode="after")
@@ -55,6 +57,7 @@ class GeneratedDeckResponse(BaseModel):
     title: str = Field(min_length=1)
     subject: str = Field(min_length=1)
     education_level: str = Field(min_length=1)
+    learning_language: str = Field(min_length=1)
     chapters: list[GeneratedChapter]
 
 
