@@ -129,6 +129,9 @@ async def generate_deck(
             generation_status="pending",
         )
 
+        db.add(chapter_deck)
+        chapter_decks.append(chapter_deck)
+
     # Calculate total cards from the PLAN
     total_cards = sum(
         chapter.card_count
