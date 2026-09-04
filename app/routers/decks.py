@@ -86,6 +86,7 @@ def create_deck(
         title=data.title,
         subject=data.subject,
         education_level=data.education_level,
+        learning_language=data.learning_language,
         is_favorite=data.is_favorite,
         parent_deck_id=data.parent_deck_id,
     )
@@ -147,7 +148,7 @@ def get_generation_status(
             Deck.parent_deck_id == parent_deck.id,
             Deck.user_id == current_user.id,
         )
-        .order_by(Deck.created_at.asc())
+        .order_by(Deck.position.asc())
     ).all()
 
     chapter_statuses = []

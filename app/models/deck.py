@@ -29,6 +29,23 @@ class Deck(Base):
         nullable=True,
     )
 
+    parent_deck: Mapped["Deck | None"] = relationship(
+        "Deck",
+        remote_side="Deck.id",
+        back_populates="child_decks",
+    )
+
+    child_decks: Mapped[list["Deck"]] = relationship(
+        "Deck",
+        back_populates="parent_deck",
+    )
+
+    position: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
     title: Mapped[str] = mapped_column(
         String(255),
         nullable=False,

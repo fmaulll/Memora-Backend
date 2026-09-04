@@ -126,7 +126,7 @@ class DeepSeekService:
         if len(generated_cards.cards) != chapter.card_count:
             raise ValueError(
                 f"Chapter '{chapter.title}' generated "
-                f"{len(generated.cards)} cards, "
+                f"{len(generated_cards.cards)} cards, "
                 f"expected {chapter.card_count}"
             )
 

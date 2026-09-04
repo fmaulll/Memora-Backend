@@ -9,6 +9,7 @@ class DeckCreate(BaseModel):
     title: str
     subject: str
     education_level: str
+    learning_language: str
     is_favorite: bool = False
     parent_deck_id: uuid.UUID | None = None
     generation_status: str = "completed"
@@ -18,6 +19,7 @@ class DeckUpdate(BaseModel):
     title: str | None = None
     subject: str | None = None
     education_level: str | None = None
+    learning_language: str | None = None
     is_favorite: bool | None = None
     parent_deck_id: uuid.UUID | None = None
 
@@ -32,6 +34,7 @@ class DeckResponse(BaseModel):
     title: str
     subject: str
     education_level: str
+    learning_language: str
     is_favorite: bool
 
     generation_status: str

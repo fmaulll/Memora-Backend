@@ -117,7 +117,7 @@ async def generate_deck(
     # Create chapter decks
     chapter_decks = []
 
-    for chapter in plan.chapters:
+    for index, chapter in enumerate(plan.chapters):
         chapter_deck = Deck(
             user_id=current_user.id,
             parent_deck_id=parent_deck.id,
@@ -125,11 +125,9 @@ async def generate_deck(
             subject=plan.subject,
             education_level=plan.education_level,
             learning_language=plan.learning_language,
+            position=index,
             generation_status="pending",
         )
-
-        db.add(chapter_deck)
-        chapter_decks.append(chapter_deck)
 
     # Calculate total cards from the PLAN
     total_cards = sum(

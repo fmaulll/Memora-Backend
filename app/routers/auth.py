@@ -3,14 +3,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.schemas.auth import UserUpdate
 from app.core.auth import get_current_user
+from jose import JWTError, jwt
+
 from app.core.security import (
+    ALGORITHM,
     create_access_token,
+    create_refresh_token,
     hash_password,
     verify_password,
 )
-from app.db.database import get_db
+from app.db.database import get_db, settings
 from app.models.user import User
 from app.schemas.auth import (
+    RefreshTokenRequest,
     AnonymousUserRequest,
     AuthResponse,
     LoginRequest,
@@ -54,13 +59,13 @@ def create_anonymous_user(
     db.commit()
     db.refresh(user)
 
-    token = create_access_token(
-        str(user.id)
-    )
+    access_token = create_access_token(str(user.id))
+    refresh_token = create_refresh_token(str(user.id))
 
     return AuthResponse(
         user=user,
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
     )
 
 
@@ -117,12 +122,12 @@ def login(
             detail="Invalid email or password",
         )
 
-    token = create_access_token(
-        str(user.id)
-    )
+    access_token = create_access_token(str(user.id))
+    refresh_token = create_refresh_token(str(user.id))
 
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
     )
 
 
@@ -167,3 +172,55 @@ def update_me(
     db.refresh(current_user)
 
     return current_user
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_access_token(
+    data: RefreshTokenRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        payload = jwt.decode(
+            data.refresh_token,
+            settings.jwt_secret,
+            algorithms=[ALGORITHM],
+        )
+
+        if payload.get("type") != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",
+            )
+
+        user_id = payload.get("sub")
+
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",
+            )
+
+        user_uuid = uuid.UUID(user_id)
+
+    except HTTPException:
+        raise
+
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+
+    user = db.scalar(
+        select(User).where(User.id == user_uuid)
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    return TokenResponse(
+        access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
+    )

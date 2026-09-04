@@ -7,7 +7,8 @@ from app.db.database import settings
 
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 90
 
 
 def hash_password(password: str) -> str:
@@ -39,6 +40,24 @@ def create_access_token(user_id: str) -> str:
 
     payload = {
         "sub": user_id,
+        "type": "access",
+        "exp": expire,
+    }
+
+    return jwt.encode(
+        payload,
+        settings.jwt_secret,
+        algorithm=ALGORITHM,
+    )
+
+def create_refresh_token(user_id: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=REFRESH_TOKEN_EXPIRE_DAYS
+    )
+
+    payload = {
+        "sub": user_id,
+        "type": "refresh",
         "exp": expire,
     }
 
