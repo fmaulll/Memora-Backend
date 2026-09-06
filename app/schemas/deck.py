@@ -32,6 +32,8 @@ class DeckResponse(BaseModel):
     parent_deck_id: uuid.UUID | None
 
     title: str
+    key_concepts: list[str] | None
+    card_count: int | None
     subject: str
     education_level: str
     learning_language: str

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     database_url: str
     jwt_secret: str
     deepseek_api_key: str
+    exam_passing_score: int = 70
 
     class Config:
         env_file = ".env"

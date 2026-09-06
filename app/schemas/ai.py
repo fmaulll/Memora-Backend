@@ -48,6 +48,19 @@ class GeneratedChapterCards(BaseModel):
     cards: list[GeneratedCard]
 
 
+class GeneratedExamQuestion(BaseModel):
+    question_type: str
+    question: str = Field(min_length=1)
+    options: list[str] = Field(default_factory=list)
+    correct_answer: str = Field(min_length=1)
+    explanation: str = Field(min_length=1)
+    source_card_id: uuid.UUID | None = None
+
+
+class GeneratedExamQuestions(BaseModel):
+    questions: list[GeneratedExamQuestion]
+
+
 class GeneratedChapter(BaseModel):
     title: str = Field(min_length=1)
     cards: list[GeneratedCard]

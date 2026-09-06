@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -37,6 +39,7 @@ from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.models.deck import Deck
 from app.models.user import User
+from app.models.generation_job import GenerationJob
 
 from pathlib import Path
 
@@ -126,6 +129,8 @@ async def generate_deck(
             education_level=plan.education_level,
             learning_language=plan.learning_language,
             position=index,
+            key_concepts=chapter.key_concepts,
+            card_count=chapter.card_count,
             generation_status="pending",
         )
 
@@ -157,11 +162,14 @@ async def generate_deck(
 
     generation_service = DeckGenerationService()
 
-    background_tasks.add_task(
-        generation_service.generate_deck,
-        parent_deck.id,
-        plan,
+    db.add(
+        GenerationJob(
+            parent_deck_id=parent_deck.id,
+            plan_json=plan.model_dump(mode="json"),
+            status="pending",
+        )
     )
+    db.commit()
 
     # Temporary response structure
     return GeneratedDeckWithTimelineResponse(
@@ -182,6 +190,87 @@ async def generate_deck(
             ],
         ),
         timeline=timeline,
+    )
+
+
+@router.post(
+    "/decks/{deck_id}/retry",
+    response_model=GeneratedDeckWithTimelineResponse,
+)
+async def retry_deck_generation(
+    deck_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    parent_deck = db.scalar(
+        select(Deck).where(
+            Deck.id == deck_id,
+            Deck.user_id == current_user.id,
+            Deck.parent_deck_id.is_(None),
+        )
+    )
+
+    if parent_deck is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Parent deck not found",
+        )
+
+    job = db.scalar(
+        select(GenerationJob).where(
+            GenerationJob.parent_deck_id == parent_deck.id,
+        )
+    )
+
+    if job is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No saved generation plan exists for this deck.",
+        )
+
+    chapter_decks = db.scalars(
+        select(Deck)
+        .where(
+            Deck.parent_deck_id == parent_deck.id,
+            Deck.user_id == current_user.id,
+        )
+        .order_by(Deck.position.asc())
+    ).all()
+
+    for chapter_deck in chapter_decks:
+        if chapter_deck.generation_status != "completed":
+            chapter_deck.generation_status = "pending"
+
+    parent_deck.generation_status = "generating"
+    db.commit()
+    db.refresh(parent_deck)
+
+    job.status = "pending"
+    job.last_error = None
+    job.locked_at = None
+    job.completed_at = None
+
+    db.commit()
+
+    return GeneratedDeckWithTimelineResponse(
+        deck=GeneratedDeckStatus(
+            id=parent_deck.id,
+            title=parent_deck.title,
+            subject=parent_deck.subject,
+            education_level=parent_deck.education_level,
+            learning_language=parent_deck.learning_language,
+            generation_status=parent_deck.generation_status,
+            chapters=[
+                GeneratedChapterStatus(
+                    id=chapter_deck.id,
+                    title=chapter_deck.title,
+                    generation_status=chapter_deck.generation_status,
+                )
+                for chapter_deck in chapter_decks
+            ],
+        ),
+        timeline=None,
     )
 
 @router.post(

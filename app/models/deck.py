@@ -2,7 +2,7 @@ import uuid
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,6 +44,16 @@ class Deck(Base):
         Integer,
         nullable=False,
         default=0,
+    )
+
+    key_concepts: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+    )
+
+    card_count: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
     )
 
     title: Mapped[str] = mapped_column(
@@ -92,6 +102,12 @@ class Deck(Base):
     )
     cards = relationship(
         "Card",
+        back_populates="deck",
+        cascade="all, delete-orphan",
+    )
+
+    exams = relationship(
+        "Exam",
         back_populates="deck",
         cascade="all, delete-orphan",
     )

@@ -9,12 +9,84 @@ from app.schemas.ai import (
     ChapterPlan,
     DeckPlanRequest,
     DeckPlanResponse,
+    GeneratedExamQuestions,
     GeneratedDeckResponse,
     GeneratedChapter,
     GeneratedChapterCards,
 )
 
 class DeepSeekService:
+
+    async def generate_exam_questions(
+        self,
+        exam,
+        cards,
+        question_count: int,
+    ) -> GeneratedExamQuestions:
+        card_context = "\n\n".join(
+            f"Source card ID: {card.id}\n"
+            f"Front: {card.front}\n"
+            f"Back: {card.back}"
+            for card in cards
+        )
+
+        prompt = f"""
+            Generate exam questions using only the supplied flashcards.
+
+            Exam type: {exam.exam_type}
+            Required maximum question count: {question_count}
+
+            Source flashcards:
+            {card_context}
+
+            Requirements:
+            - Return no more than {question_count} questions.
+            - Use only information present in the source flashcards.
+            - Avoid duplicate questions.
+            - Use only multiple_choice or true_false question types.
+            - Multiple-choice questions must have exactly one correct answer
+              and plausible incorrect options.
+            - True/false questions must have exactly two options: True and False.
+            - Include a short explanation.
+            - Return the source card ID whenever possible.
+            - Return valid JSON only.
+
+            Return this structure:
+            {{
+                "questions": [
+                    {{
+                        "question_type": "multiple_choice",
+                        "question": "string",
+                        "options": ["string"],
+                        "correct_answer": "string",
+                        "explanation": "string",
+                        "source_card_id": "uuid"
+                    }}
+                ]
+            }}
+        """
+
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="deepseek-v4-flash",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You generate accurate exam questions from supplied "
+                        "flashcards. Return valid JSON only."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+        )
+
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("DeepSeek returned an empty exam response")
+
+        return GeneratedExamQuestions.model_validate_json(content)
 
     def __init__(self):
         self.client = OpenAI(

@@ -5,10 +5,16 @@ from app.routers.auth import router as auth_router
 from app.routers.decks import router as deck_router
 from app.routers.cards import router as card_router
 from app.routers.ai import router as ai_router
+from app.routers.exams import (
+    question_router as exam_question_router,
+    router as exam_router,
+)
 
 # Import models so SQLAlchemy knows about them
 from app.models.user import User
 from app.models.deck import Deck
+from app.models.exam import Exam, ExamAttempt, ExamQuestion, UserExamProgression
+from app.models.generation_job import GenerationJob
 
 
 
@@ -21,6 +27,8 @@ app.include_router(auth_router)
 app.include_router(deck_router)
 app.include_router(card_router)
 app.include_router(ai_router)
+app.include_router(exam_router)
+app.include_router(exam_question_router)
 
 @app.get("/health")
 def health_check():

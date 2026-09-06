@@ -4,10 +4,36 @@ from app.ai.deepseek import DeepSeekService
 from app.db.database import SessionLocal
 from app.models.deck import Deck
 from app.models.card import Card
-from app.schemas.ai import DeckPlanResponse
+from app.schemas.ai import ChapterPlan, DeckPlanResponse
 
 
 class DeckGenerationService:
+
+    max_attempts = 3
+
+    async def _generate_chapter_with_retries(
+        self,
+        ai_service,
+        plan,
+        chapter_plan,
+    ):
+        last_error = None
+
+        for attempt in range(1, self.max_attempts + 1):
+            try:
+                return await ai_service.generate_chapter(
+                    plan,
+                    chapter_plan,
+                )
+            except Exception as error:
+                last_error = error
+                print(
+                    f"Failed generating chapter "
+                    f"'{chapter_plan.title}' "
+                    f"(attempt {attempt}/{self.max_attempts}): {error}"
+                )
+
+        raise last_error
 
     async def generate_deck(
         self,
@@ -39,20 +65,35 @@ class DeckGenerationService:
                 if not chapter_deck:
                     continue
 
+                if chapter_deck.generation_status == "completed":
+                    continue
+
+                chapter_plan = ChapterPlan(
+                    title=chapter_deck.title,
+                    description=chapter_plan.description,
+                    key_concepts=(
+                        chapter_deck.key_concepts
+                        if chapter_deck.key_concepts is not None
+                        else chapter_plan.key_concepts
+                    ),
+                    card_count=(
+                        chapter_deck.card_count
+                        if chapter_deck.card_count is not None
+                        else chapter_plan.card_count
+                    ),
+                )
+
                 # Mark chapter as generating
                 chapter_deck.generation_status = "generating"
                 db.commit()
 
                 try:
-                    # Generate chapter cards
-                    generated_chapter = (
-                        await ai_service.generate_chapter(
-                            plan,
-                            chapter_plan,
-                        )
+                    generated_chapter = await self._generate_chapter_with_retries(
+                        ai_service,
+                        plan,
+                        chapter_plan,
                     )
 
-                    # Save generated cards
                     for generated_card in generated_chapter.cards:
                         card = Card(
                             deck_id=chapter_deck.id,
@@ -62,12 +103,10 @@ class DeckGenerationService:
 
                         db.add(card)
 
-                    # Mark chapter as completed
                     chapter_deck.generation_status = "completed"
-
                     db.commit()
 
-                except Exception as error:
+                except Exception:
                     db.rollback()
 
                     chapter_deck = db.get(
@@ -78,11 +117,6 @@ class DeckGenerationService:
                     if chapter_deck:
                         chapter_deck.generation_status = "failed"
                         db.commit()
-
-                    print(
-                        f"Failed generating chapter "
-                        f"'{chapter_plan.title}': {error}"
-                    )
 
             # Check final status
             remaining = (
