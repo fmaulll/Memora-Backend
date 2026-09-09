@@ -71,8 +71,6 @@ def create_deck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    print("REQUEST ID:", data.id)
-
     validate_parent_deck(
         parent_deck_id=data.parent_deck_id,
         current_deck_id=None,
@@ -81,23 +79,13 @@ def create_deck(
     )
 
     deck = Deck(
-        id=data.id,
+        **data.model_dump(),
         user_id=current_user.id,
-        title=data.title,
-        subject=data.subject,
-        education_level=data.education_level,
-        learning_language=data.learning_language,
-        is_favorite=data.is_favorite,
-        parent_deck_id=data.parent_deck_id,
     )
-
-    print("MODEL ID BEFORE DB:", deck.id)
 
     db.add(deck)
     db.commit()
     db.refresh(deck)
-
-    print("MODEL ID AFTER DB:", deck.id)
 
     return deck
 

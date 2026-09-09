@@ -99,6 +99,7 @@ class GeneratedDeckStatus(BaseModel):
     title: str
     subject: str
     education_level: str
+    learning_language: str
     generation_status: str
 
     chapters: list[GeneratedChapterStatus]
