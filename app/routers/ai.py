@@ -7,9 +7,13 @@ from fastapi import (
     UploadFile,
     File,
     HTTPException,
+    Header,
 )
 
-from app.services.deck_generation import DeckGenerationService
+from app.models.subscription import AIGenerationRequest
+from app.services.ai_access import admit_deck, require_plan_access
+from app.services.apple import utcnow
+from app.services.subscriptions import lock_user, require_paid
 
 from app.ai.deepseek import DeepSeekService
 from app.ai.gemini import GeminiService
@@ -60,6 +64,7 @@ async def generate_deck_plan(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    require_plan_access(db, current_user)
     materials = []
 
     if request.study_material_ids:
@@ -96,12 +101,15 @@ async def generate_deck_plan(
     "/decks/generate",
     response_model=GeneratedDeckWithTimelineResponse,
 )
-async def generate_deck(
+def generate_deck(
     request: GenerateDeckRequest,
-    background_tasks: BackgroundTasks,
+    idempotency_key: uuid.UUID = Header(alias="Idempotency-Key"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    prior, used_free, request_hash = admit_deck(db, current_user, idempotency_key, request)
+    if prior:
+        return GeneratedDeckWithTimelineResponse.model_validate(prior.response_json)
     plan = request.plan
 
     # Create parent deck
@@ -153,26 +161,14 @@ async def generate_deck(
         study_purpose=request.study_purpose,
     )
 
-    db.commit()
+    db.flush()
+    db.add(GenerationJob(
+        parent_deck_id=parent_deck.id,
+        plan_json=plan.model_dump(mode="json"),
+        status="pending",
+    ))
 
-    db.refresh(parent_deck)
-
-    for chapter_deck in chapter_decks:
-        db.refresh(chapter_deck)
-
-    generation_service = DeckGenerationService()
-
-    db.add(
-        GenerationJob(
-            parent_deck_id=parent_deck.id,
-            plan_json=plan.model_dump(mode="json"),
-            status="pending",
-        )
-    )
-    db.commit()
-
-    # Temporary response structure
-    return GeneratedDeckWithTimelineResponse(
+    response = GeneratedDeckWithTimelineResponse(
         deck=GeneratedDeckStatus(
             id=parent_deck.id,
             title=parent_deck.title,
@@ -192,17 +188,27 @@ async def generate_deck(
         timeline=timeline,
     )
 
+    db.add(AIGenerationRequest(
+        user_id=current_user.id, idempotency_key=idempotency_key,
+        request_hash=request_hash, used_free_allowance=used_free,
+        parent_deck_id=parent_deck.id, response_json=response.model_dump(mode="json"),
+        created_at=utcnow(),
+    ))
+    db.commit()
+    return response
+
 
 @router.post(
     "/decks/{deck_id}/retry",
     response_model=GeneratedDeckWithTimelineResponse,
 )
-async def retry_deck_generation(
+def retry_deck_generation(
     deck_id: uuid.UUID,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    lock_user(db, current_user.id)
     parent_deck = db.scalar(
         select(Deck).where(
             Deck.id == deck_id,
@@ -220,7 +226,7 @@ async def retry_deck_generation(
     job = db.scalar(
         select(GenerationJob).where(
             GenerationJob.parent_deck_id == parent_deck.id,
-        )
+        ).with_for_update()
     )
 
     if job is None:
@@ -228,6 +234,13 @@ async def retry_deck_generation(
             status_code=400,
             detail="No saved generation plan exists for this deck.",
         )
+
+    receipt = db.scalar(select(AIGenerationRequest).where(
+        AIGenerationRequest.parent_deck_id == parent_deck.id,
+        AIGenerationRequest.user_id == current_user.id,
+    ))
+    if receipt is None:
+        require_paid(db, current_user)
 
     chapter_decks = db.scalars(
         select(Deck)
@@ -238,19 +251,16 @@ async def retry_deck_generation(
         .order_by(Deck.position.asc())
     ).all()
 
-    for chapter_deck in chapter_decks:
-        if chapter_deck.generation_status != "completed":
-            chapter_deck.generation_status = "pending"
-
-    parent_deck.generation_status = "generating"
-    db.commit()
-    db.refresh(parent_deck)
-
-    job.status = "pending"
-    job.last_error = None
-    job.locked_at = None
-    job.completed_at = None
-
+    # Pending/running/completed jobs are idempotent no-ops. Only failed work resumes.
+    if job.status == "failed":
+        for chapter_deck in chapter_decks:
+            if chapter_deck.generation_status != "completed":
+                chapter_deck.generation_status = "pending"
+        parent_deck.generation_status = "generating"
+        job.status = "pending"
+        job.last_error = None
+        job.locked_at = None
+        job.completed_at = None
     db.commit()
 
     return GeneratedDeckWithTimelineResponse(

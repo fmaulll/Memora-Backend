@@ -4,7 +4,7 @@ from app.ai.deepseek import DeepSeekService
 from app.db.database import SessionLocal
 from app.models.deck import Deck
 from app.models.card import Card
-from app.schemas.ai import ChapterPlan, DeckPlanResponse
+from app.schemas.ai import DeckPlanResponse
 
 
 class DeckGenerationService:
@@ -51,38 +51,26 @@ class DeckGenerationService:
             ai_service = DeepSeekService()
 
             # Generate chapters one by one
-            for chapter_plan in plan.chapters:
+            missing_chapter = False
+            for position, chapter_plan in enumerate(plan.chapters):
 
                 chapter_deck = (
                     db.query(Deck)
                     .filter(
                         Deck.parent_deck_id == parent_deck_id,
-                        Deck.title == chapter_plan.title,
+                        Deck.position == position,
                     )
                     .first()
                 )
 
                 if not chapter_deck:
+                    missing_chapter = True
                     continue
 
                 if chapter_deck.generation_status == "completed":
                     continue
 
-                chapter_plan = ChapterPlan(
-                    title=chapter_deck.title,
-                    description=chapter_plan.description,
-                    key_concepts=(
-                        chapter_deck.key_concepts
-                        if chapter_deck.key_concepts is not None
-                        else chapter_plan.key_concepts
-                    ),
-                    card_count=(
-                        chapter_deck.card_count
-                        if chapter_deck.card_count is not None
-                        else chapter_plan.card_count
-                    ),
-                )
-
+                # The admitted plan is immutable; retries cannot expand the free workload.
                 # Mark chapter as generating
                 chapter_deck.generation_status = "generating"
                 db.commit()
@@ -134,7 +122,7 @@ class DeckGenerationService:
             )
 
             if parent_deck:
-                if remaining == 0:
+                if remaining == 0 and not missing_chapter:
                     parent_deck.generation_status = "completed"
                 else:
                     parent_deck.generation_status = "failed"

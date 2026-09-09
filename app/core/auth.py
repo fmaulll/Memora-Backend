@@ -28,6 +28,8 @@ def get_current_user(
             algorithms=[ALGORITHM],
         )
 
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="An access token is required")
         user_id = payload.get("sub")
 
         if not user_id:

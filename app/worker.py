@@ -1,9 +1,9 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
-from app.db.database import SessionLocal
+from app.db.database import SessionLocal, engine
 from app.models.deck import Deck
 from app.models.generation_job import GenerationJob
 from app.schemas.ai import DeckPlanResponse
@@ -51,6 +51,23 @@ class GenerationWorker:
             return job.id
 
     async def process_job(self, job_id):
+        # Stale-job recovery must not run a second generator while the first is
+        # still alive. A dedicated connection holds the lock across commits.
+        if engine.dialect.name != "postgresql":
+            return await self._process_job(job_id)
+        lock_id = int.from_bytes(job_id.bytes[:8], "big", signed=True)
+        with engine.connect() as connection:
+            acquired = connection.scalar(text("SELECT pg_try_advisory_lock(:key)"), {"key": lock_id})
+            connection.commit()
+            if not acquired:
+                return
+            try:
+                await self._process_job(job_id)
+            finally:
+                connection.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": lock_id})
+                connection.commit()
+
+    async def _process_job(self, job_id):
         with SessionLocal() as db:
             job = db.get(GenerationJob, job_id)
             if job is None:

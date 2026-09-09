@@ -14,3 +14,4 @@ pypdf
 python-docx
 python-pptx
 python-multipart
+app-store-server-library==3.1.2

@@ -1,13 +1,21 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from app.schemas.subscription import Entitlement
 
 
 class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def password_length(cls, value):
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must be at most 72 UTF-8 bytes")
+        return value
 
 
 class LoginRequest(BaseModel):
@@ -22,6 +30,10 @@ class UserResponse(BaseModel):
     name: str
     email: EmailStr
     created_at: datetime
+    is_anonymous: bool
+    app_account_token: uuid.UUID
+    free_ai_deck_available: bool
+    entitlement: Entitlement
 
 
 class UserUpdate(BaseModel):
@@ -30,6 +42,7 @@ class UserUpdate(BaseModel):
 
 
 class TokenResponse(BaseModel):
+    user: UserResponse
     access_token: str
     refresh_token: str
     token_type: str = "bearer"

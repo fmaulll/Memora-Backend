@@ -23,6 +23,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
+from app.routers.subscriptions import router as subscription_router
+
+app.include_router(subscription_router)
 app.include_router(auth_router)
 app.include_router(deck_router)
 app.include_router(card_router)

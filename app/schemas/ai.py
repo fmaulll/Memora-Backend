@@ -112,3 +112,9 @@ class GenerateDeckRequest(BaseModel):
     plan: DeckPlanResponse
     study_purpose: str
     target_date: date | None = None
+
+    @model_validator(mode="after")
+    def validate_generation_limits(self):
+        if len(self.plan.chapters) > 20 or any(not 1 <= chapter.card_count <= 100 for chapter in self.plan.chapters):
+            raise ValueError("Generation allows 1–20 chapters with 1–100 cards per chapter")
+        return self

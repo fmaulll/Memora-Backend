@@ -10,6 +10,7 @@ from app.models.exam import Exam, ExamQuestion
 from app.models.user import User
 from app.schemas.exam import ExamType
 from app.services.exam import ExamService
+from app.services.subscriptions import require_paid
 
 
 class ExamGenerationService:
@@ -87,6 +88,9 @@ class ExamGenerationService:
         ).all()
         if existing:
             return exam, existing
+
+        require_paid(db, current_user)
+        db.commit()
 
         parent_deck = self.exam_service.get_parent_deck(
             exam.deck_id,

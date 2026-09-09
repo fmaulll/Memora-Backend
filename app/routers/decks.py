@@ -8,6 +8,8 @@ from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.models.card import Card
 from app.models.deck import Deck
+from app.models.generation_job import GenerationJob
+from app.services.apple import fail
 from app.models.user import User
 from app.schemas.deck import (
     ChapterGenerationStatus,
@@ -77,6 +79,11 @@ def create_deck(
         db=db,
         current_user=current_user,
     )
+
+    if data.parent_deck_id and db.scalar(select(GenerationJob.id).where(
+        GenerationJob.parent_deck_id == data.parent_deck_id,
+    )):
+        fail(409, "generated_deck_structure_locked", "Generated chapter membership is managed by the generation job.")
 
     deck = Deck(
         **data.model_dump(),
@@ -212,6 +219,13 @@ def update_deck(
         )
 
     updates = data.model_dump(exclude_unset=True)
+
+    managed_ids = [deck.id, deck.parent_deck_id, updates.get("parent_deck_id")]
+    managed = db.scalar(select(GenerationJob.id).where(
+        GenerationJob.parent_deck_id.in_([value for value in managed_ids if value is not None]),
+    ))
+    if managed and {"parent_deck_id", "position", "key_concepts", "card_count", "generation_status"}.intersection(updates):
+        fail(409, "generated_deck_structure_locked", "Generation metadata is fixed for an admitted AI deck.")
 
     if "parent_deck_id" in updates:
         validate_parent_deck(

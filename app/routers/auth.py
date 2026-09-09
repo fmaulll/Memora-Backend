@@ -14,6 +14,9 @@ from app.core.security import (
 )
 from app.db.database import get_db, settings
 from app.models.user import User
+from app.services.accounts import user_response, upgrade_account, merge_account
+from app.services.subscriptions import lock_user
+from app.services.apple import fail
 from app.schemas.auth import (
     RefreshTokenRequest,
     AnonymousUserRequest,
@@ -48,6 +51,7 @@ def create_anonymous_user(
 
     user = User(
         id=user_id,
+        is_anonymous=True,
         name=data.name,
         email=anonymous_email,
         password_hash=hash_password(
@@ -63,7 +67,7 @@ def create_anonymous_user(
     refresh_token = create_refresh_token(str(user.id))
 
     return AuthResponse(
-        user=user,
+        user=user_response(db, user),
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -98,7 +102,7 @@ def register(
     db.commit()
     db.refresh(user)
 
-    return user
+    return user_response(db, user)
 
 
 @router.post(
@@ -126,6 +130,7 @@ def login(
     refresh_token = create_refresh_token(str(user.id))
 
     return TokenResponse(
+        user=user_response(db, user),
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -137,8 +142,9 @@ def login(
 )
 def get_me(
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    return current_user
+    return user_response(db, current_user)
 
 @router.put(
     "/me",
@@ -149,6 +155,9 @@ def update_me(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    current_user = lock_user(db, current_user.id)
+    if current_user.is_anonymous and data.email is not None:
+        fail(409, "upgrade_required", "Use /auth/upgrade to set an email and password together.")
     if data.email is not None and data.email != current_user.email:
         existing_user = db.scalar(
             select(User).where(
@@ -171,7 +180,7 @@ def update_me(
     db.commit()
     db.refresh(current_user)
 
-    return current_user
+    return user_response(db, current_user)
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_access_token(
@@ -221,6 +230,24 @@ def refresh_access_token(
         )
 
     return TokenResponse(
+        user=user_response(db, user),
         access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
+    )
+
+@router.post("/upgrade", response_model=AuthResponse)
+def upgrade(request: RegisterRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    user = upgrade_account(db, user, request)
+    return AuthResponse(
+        user=user_response(db, user), access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
+    )
+
+
+@router.post("/merge", response_model=AuthResponse)
+def merge(request: LoginRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    user = merge_account(db, user, request)
+    return AuthResponse(
+        user=user_response(db, user), access_token=create_access_token(str(user.id)),
         refresh_token=create_refresh_token(str(user.id)),
     )
