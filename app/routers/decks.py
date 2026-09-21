@@ -10,6 +10,7 @@ from app.models.card import Card
 from app.models.deck import Deck
 from app.models.user import User
 from app.schemas.deck import (
+    ChapterReorderRequest,
     ChapterGenerationStatus,
     DeckCreate,
     DeckGenerationStatusResponse,
@@ -254,3 +255,98 @@ def delete_deck(
 
     db.delete(deck)
     db.commit()
+
+@router.put(
+    "/{parent_deck_id}/chapters/reorder",
+    response_model=list[DeckResponse],
+)
+def reorder_chapters(
+    parent_deck_id: uuid.UUID,
+    data: ChapterReorderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    print("========== REORDER CHAPTERS ==========")
+    print("PARENT:", parent_deck_id)
+    print("CHAPTER IDS:", data.chapter_ids)
+
+    # Make sure parent exists, belongs to user,
+    # and is actually a root deck.
+    parent = db.scalar(
+        select(Deck).where(
+            Deck.id == parent_deck_id,
+            Deck.user_id == current_user.id,
+            Deck.parent_deck_id.is_(None),
+        )
+    )
+
+    if parent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parent deck not found.",
+        )
+
+    # Load every chapter belonging to this parent.
+    chapters = db.scalars(
+        select(Deck).where(
+            Deck.parent_deck_id == parent_deck_id,
+            Deck.user_id == current_user.id,
+        )
+    ).all()
+
+    chapters_by_id = {
+        chapter.id: chapter
+        for chapter in chapters
+    }
+
+    requested_ids = data.chapter_ids
+
+    # Prevent duplicate chapter IDs.
+    if len(requested_ids) != len(set(requested_ids)):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duplicate chapter IDs.",
+        )
+
+    # The request must contain exactly the chapters
+    # belonging to this parent.
+    if set(requested_ids) != set(chapters_by_id.keys()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chapter list does not match parent deck.",
+        )
+
+    # Array order becomes the canonical position.
+    for position, chapter_id in enumerate(requested_ids):
+        chapter = chapters_by_id[chapter_id]
+        chapter.position = position
+
+        print(
+            "CHAPTER POSITION:",
+            chapter.title,
+            "→",
+            position,
+        )
+
+    db.commit()
+
+    # Return chapters in their new order.
+    updated_chapters = db.scalars(
+        select(Deck)
+        .where(
+            Deck.parent_deck_id == parent_deck_id,
+            Deck.user_id == current_user.id,
+        )
+        .order_by(
+            Deck.position.asc(),
+            Deck.created_at.asc(),
+        )
+    ).all()
+
+    print(
+        "✅ CHAPTER REORDER COMPLETE:",
+        len(updated_chapters),
+        "chapters",
+    )
+
+    return updated_chapters

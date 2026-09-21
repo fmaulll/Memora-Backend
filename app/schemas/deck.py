@@ -9,7 +9,7 @@ class DeckCreate(BaseModel):
     title: str
     subject: str
     education_level: str
-    learning_language: str
+    learning_language: str | None = None
     is_favorite: bool = False
     parent_deck_id: uuid.UUID | None = None
     position: int = Field(default=0, ge=0)
@@ -56,7 +56,7 @@ class DeckResponse(BaseModel):
     card_count: int | None
     subject: str
     education_level: str
-    learning_language: str
+    learning_language: str | None
     is_favorite: bool
 
     generation_status: str
@@ -75,3 +75,10 @@ class DeckGenerationStatusResponse(BaseModel):
     deck_id: uuid.UUID
     generation_status: str
     chapters: list[ChapterGenerationStatus]
+
+class ChapterPositionUpdate(BaseModel):
+    id: uuid.UUID
+    position: int
+
+class ChapterReorderRequest(BaseModel):
+    chapter_ids: list[uuid.UUID]

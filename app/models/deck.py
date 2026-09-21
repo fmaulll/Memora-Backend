@@ -71,9 +71,9 @@ class Deck(Base):
         nullable=False,
     )
 
-    learning_language: Mapped[str] = mapped_column(
+    learning_language: Mapped[str | None] = mapped_column(
         String(100),
-        nullable=False,
+        nullable=True,
     )
 
     is_favorite: Mapped[bool] = mapped_column(
