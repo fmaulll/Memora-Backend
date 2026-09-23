@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -21,10 +22,14 @@ class ExamResponse(BaseModel):
 
 
 class ExamStatusResponse(BaseModel):
-    exam_id: uuid.UUID
+    exam_id: uuid.UUID | None
     exam_type: ExamType
-    status: str
+    status: Literal["locked", "unlocked", "completed", "not_applicable"]
+    applicable: bool
+    available: bool
+    completed: bool
     passed: bool
+    chapter_ids: list[uuid.UUID]
     best_score: int | None
     attempt_count: int
     completed_at: datetime | None

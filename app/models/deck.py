@@ -23,6 +23,11 @@ class Deck(Base):
         nullable=False,
     )
 
+    # Replaced only by an explicit reset, never by ordinary study submissions.
+    progress_epoch: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), default=uuid.uuid4, nullable=False,
+    )
+
     parent_deck_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("decks.id"),

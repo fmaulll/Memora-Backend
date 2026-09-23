@@ -11,6 +11,9 @@ from app.models.user import User
 from app.db.database import settings
 from app.schemas.exam import ExamType
 from app.services.exam_groups import split_chapters
+from app.services.chapters import ordered_chapters
+from app.services.chapter_progress import get_chapter_progress
+from app.services.study_progress import lock_progress_user
 
 
 class ExamService:
@@ -52,17 +55,15 @@ class ExamService:
         self,
         parent_deck: Deck,
         db: Session,
+        applicable_types: set[ExamType],
     ):
-        definitions = {}
+        # The caller holds the user lock through commit, including first creation.
+        # Retain legacy definitions even when their group is no longer applicable.
+        definitions = {ExamType(exam.exam_type): exam for exam in db.scalars(
+            select(Exam).where(Exam.deck_id == parent_deck.id)
+        ).all()}
         for exam_type in self.exam_types:
-            exam = db.scalar(
-                select(Exam).where(
-                    Exam.deck_id == parent_deck.id,
-                    Exam.exam_type == exam_type.value,
-                )
-            )
-
-            if exam is None:
+            if exam_type in applicable_types and exam_type not in definitions:
                 exam = Exam(
                     deck_id=parent_deck.id,
                     exam_type=exam_type.value,
@@ -70,11 +71,8 @@ class ExamService:
                     passing_score=settings.exam_passing_score,
                 )
                 db.add(exam)
-                db.flush()
-
-            definitions[exam_type] = exam
-
-        db.commit()
+                definitions[exam_type] = exam
+        db.flush()
         return definitions
 
     def get_status(
@@ -83,17 +81,30 @@ class ExamService:
         db: Session,
         current_user: User,
     ):
+        # Shared with learning/reset; submission retains this lock until its attempt
+        # and progression are committed. Status callers must also commit/rollback.
+        lock_progress_user(db, current_user.id)
         parent_deck = self.get_parent_deck(
             parent_deck_id,
             db,
             current_user,
         )
-        definitions = self.get_or_create_definitions(parent_deck, db)
+        chapters = ordered_chapters(db, parent_deck, lock=True)
+        first_half, second_half = split_chapters(chapters)
+        groups = {
+            ExamType.first_half: first_half,
+            ExamType.second_half: second_half,
+            ExamType.final: chapters,
+        }
+        progress = get_chapter_progress(db, current_user.id, chapters)
+        definitions = self.get_or_create_definitions(
+            parent_deck, db, {exam_type for exam_type, group in groups.items() if group},
+        )
         progression = db.scalar(
             select(UserExamProgression).where(
                 UserExamProgression.user_id == current_user.id,
                 UserExamProgression.deck_id == parent_deck.id,
-            )
+            ).execution_options(populate_existing=True)
         )
 
         if progression is None:
@@ -102,7 +113,7 @@ class ExamService:
                 deck_id=parent_deck.id,
             )
             db.add(progression)
-            db.commit()
+            db.flush()
 
         passed = {
             ExamType.first_half: progression.first_half_passed,
@@ -125,18 +136,28 @@ class ExamService:
             ExamType.final: progression.final_completed_at,
         }
 
+        prerequisites = {
+            ExamType.first_half: bool(first_half) and all(progress[chapter.id].completed for chapter in first_half),
+            ExamType.second_half: bool(second_half) and all(progress[chapter.id].completed for chapter in second_half),
+            # With one chapter, first_half is the last applicable half exam.
+            ExamType.final: passed[ExamType.second_half if second_half else ExamType.first_half],
+        }
         statuses = []
-        for index, exam_type in enumerate(self.exam_types):
-            is_unlocked = all(
-                passed[previous_exam_type]
-                for previous_exam_type in self.exam_types[:index]
-            )
+        for exam_type in self.exam_types:
+            applicable = bool(groups[exam_type])
+            available = applicable and (passed[exam_type] or prerequisites[exam_type])
+            exam = definitions.get(exam_type)
             statuses.append({
-                "exam_id": definitions[exam_type].id,
+                "exam_id": exam.id if exam else None,
                 "exam_type": exam_type,
                 "status": "completed" if passed[exam_type]
-                else "unlocked" if is_unlocked else "locked",
+                else "not_applicable" if not applicable
+                else "unlocked" if available else "locked",
+                "applicable": applicable,
+                "available": available,
+                "completed": passed[exam_type],
                 "passed": passed[exam_type],
+                "chapter_ids": [chapter.id for chapter in groups[exam_type]],
                 "best_score": best_scores[exam_type],
                 "attempt_count": attempt_counts[exam_type],
                 "completed_at": completed_at[exam_type],
@@ -147,6 +168,16 @@ class ExamService:
             "exams": statuses,
         }
 
+    @staticmethod
+    def require_available(progression_status: dict, exam_type: ExamType) -> dict:
+        item = next(item for item in progression_status["exams"] if item["exam_type"] == exam_type)
+        if not item["available"]:
+            raise HTTPException(status_code=403, detail={
+                "code": "exam_not_applicable" if not item["applicable"] else "exam_locked",
+                "message": "This exam is not applicable." if not item["applicable"] else "This exam is locked.",
+            })
+        return item
+
     def get_exam(
         self,
         parent_deck_id: uuid.UUID,
@@ -154,6 +185,7 @@ class ExamService:
         db: Session,
         current_user: User,
     ):
+        self.require_available(self.get_status(parent_deck_id, db, current_user), exam_type)
         parent_deck = self.get_parent_deck(
             parent_deck_id,
             db,
@@ -181,14 +213,9 @@ class ExamService:
         db: Session,
         current_user: User,
     ):
-        sub_decks = db.scalars(
-            select(Deck)
-            .where(
-                Deck.parent_deck_id == parent_deck.id,
-                Deck.user_id == current_user.id,
-            )
-            .order_by(Deck.position.asc(), Deck.id.asc())
-        ).all()
+        if parent_deck.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Deck not found")
+        sub_decks = ordered_chapters(db, parent_deck)
 
         if not sub_decks:
             raise HTTPException(

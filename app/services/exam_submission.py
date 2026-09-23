@@ -13,12 +13,6 @@ from app.services.exam import ExamService
 
 class ExamSubmissionService:
 
-    exam_order = (
-        ExamType.first_half,
-        ExamType.second_half,
-        ExamType.final,
-    )
-
     def submit(
         self,
         exam_id: uuid.UUID,
@@ -52,15 +46,7 @@ class ExamSubmissionService:
             db,
             current_user,
         )
-        current_status = next(
-            item for item in progression_status["exams"]
-            if item["exam_id"] == exam.id
-        )
-        if current_status["status"] == "locked":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This exam is locked.",
-            )
+        exam_service.require_available(progression_status, ExamType(exam.exam_type))
 
         questions = db.scalars(
             select(ExamQuestion)
@@ -141,15 +127,14 @@ class ExamSubmissionService:
                 score,
                 passed,
             )
+            db.flush()
+            updated_status = exam_service.get_status(parent_deck.id, db, current_user)
+            next_exam_type, next_unlocked, completed = self._next_status(exam.exam_type, updated_status)
             db.commit()
         except Exception:
             db.rollback()
             raise
 
-        next_exam_type, next_unlocked, completed = self._next_status(
-            exam.exam_type,
-            progression,
-        )
         return ExamSubmissionResponse(
             exam_id=exam.id,
             exam_type=ExamType(exam.exam_type),
@@ -187,13 +172,11 @@ class ExamSubmissionService:
             setattr(progression, passed_field, True)
             setattr(progression, completed_field, datetime.utcnow())
 
-    def _next_status(self, exam_type, progression):
-        current_index = self.exam_order.index(ExamType(exam_type))
-        if current_index == len(self.exam_order) - 1:
-            return None, False, progression.final_passed
-        next_type = self.exam_order[current_index + 1]
-        current_passed = getattr(
-            progression,
-            f"{ExamType(exam_type).value}_passed",
-        )
-        return next_type, current_passed, progression.final_passed
+    def _next_status(self, exam_type, progression_status):
+        exams = [item for item in progression_status["exams"] if item["applicable"]]
+        current_index = next(i for i, item in enumerate(exams) if item["exam_type"] == exam_type)
+        completed = next(item["passed"] for item in exams if item["exam_type"] == ExamType.final)
+        if current_index == len(exams) - 1:
+            return None, False, completed
+        next_exam = exams[current_index + 1]
+        return next_exam["exam_type"], next_exam["available"], completed

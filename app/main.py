@@ -6,6 +6,7 @@ from app.routers.decks import router as deck_router
 from app.routers.cards import router as card_router
 from app.routers.ai import router as ai_router
 from app.routers.study_plan import router as study_plan_router
+from app.routers.study_progress import router as study_progress_router
 from app.routers.exams import (
     question_router as exam_question_router,
     router as exam_router,
@@ -31,6 +32,7 @@ app.include_router(ai_router)
 app.include_router(exam_router)
 app.include_router(exam_question_router)
 app.include_router(study_plan_router)
+app.include_router(study_progress_router)
 
 @app.get("/health")
 def health_check():

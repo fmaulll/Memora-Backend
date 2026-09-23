@@ -11,6 +11,7 @@ from app.models.card import Card
 from app.models.deck import Deck
 from app.models.study_plan import StudyPlan, StudyPlanItem
 from app.schemas.study_plan import StudyPlanCreate, StudyPlanChapterResponse, StudyPlanResponse
+from app.services.chapters import ordered_chapters
 from app.services.study_timeline import ALGORITHM_VERSION, ChapterInput, ScheduleResult, generate_schedule
 
 
@@ -32,12 +33,6 @@ def owned_parent(db: Session, deck_id: uuid.UUID, user_id: uuid.UUID, *, lock: b
     if parent.parent_deck_id is not None:
         raise plan_error(400, "root_deck_required", "Study plans require a parent/root deck")
     return parent
-
-
-def ordered_chapters(db: Session, parent: Deck) -> list[Deck]:
-    return list(db.scalars(select(Deck).where(
-        Deck.parent_deck_id == parent.id, Deck.user_id == parent.user_id,
-    ).order_by(Deck.position.asc(), Deck.id.asc())).all())
 
 
 def chapter_inputs(db: Session, chapters: list[Deck]) -> tuple[list[ChapterInput], str]:

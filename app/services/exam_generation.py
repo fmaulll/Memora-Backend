@@ -29,16 +29,7 @@ class ExamGenerationService:
             db,
             current_user,
         )
-        current_status = next(
-            item for item in progression["exams"]
-            if item["exam_id"] == exam.id
-        )
-
-        if current_status["status"] == "locked":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This exam is locked.",
-            )
+        self.exam_service.require_available(progression, ExamType(exam.exam_type))
 
     def _validate_question(self, question, selected_card_ids):
         if question.question_type not in {"multiple_choice", "true_false"}:
@@ -86,6 +77,7 @@ class ExamGenerationService:
             .order_by(ExamQuestion.position.asc())
         ).all()
         if existing:
+            db.commit()
             return exam, existing
 
         parent_deck = self.exam_service.get_parent_deck(
@@ -111,6 +103,10 @@ class ExamGenerationService:
             exam.question_count = min(10, len(unique_cards))
 
         selected_cards = unique_cards[:exam.question_count]
+        selected_card_ids = {card.id for card in selected_cards}
+        # Release learning/reset locks during the external AI request. Recheck
+        # eligibility afterwards so a concurrent reset cannot bypass the gate.
+        db.commit()
         try:
             generated = await self.ai_service.generate_exam_questions(
                 exam,
@@ -126,10 +122,16 @@ class ExamGenerationService:
         if len(generated.questions) > exam.question_count:
             raise ValueError("AI returned more questions than requested")
 
-        selected_card_ids = {card.id for card in selected_cards}
         questions = []
         seen_questions = set()
         try:
+            self._validate_unlocked(exam, db, current_user)
+            existing = db.scalars(select(ExamQuestion).where(
+                ExamQuestion.exam_id == exam.id,
+            ).order_by(ExamQuestion.position)).all()
+            if existing:
+                db.commit()
+                return exam, existing
             for position, generated_question in enumerate(generated.questions, start=1):
                 self._validate_question(generated_question, selected_card_ids)
                 normalized = generated_question.question.strip().casefold()

@@ -207,7 +207,7 @@ class StudyPlanAPITests(unittest.TestCase):
         self.create(start_date="2020-01-01", requested_target_date="2020-02-01")
         after = ExamService().get_status(self.parent.id, self.db, self.user)
         self.assertEqual(before, after)
-        self.assertEqual([entry["status"] for entry in after["exams"]], ["unlocked", "locked", "locked"])
+        self.assertEqual([entry["status"] for entry in after["exams"]], ["locked", "locked", "locked"])
 
     def generation_request(self):
         return dict(

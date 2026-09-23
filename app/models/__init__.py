@@ -4,3 +4,4 @@ from app.models.card import Card
 from app.models.exam import Exam, ExamAttempt, ExamQuestion, UserExamProgression
 from app.models.generation_job import GenerationJob
 from app.models.study_plan import StudyPlan, StudyPlanItem
+from app.models.study_progress import CardProgress, StudyProgressReceipt

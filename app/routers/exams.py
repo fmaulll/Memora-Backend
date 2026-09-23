@@ -72,13 +72,11 @@ async def generate_exam_questions(
     current_user: User = Depends(get_current_user),
 ):
     service = ExamService()
-    parent_deck = service.get_parent_deck(parent_deck_id, db, current_user)
-    definitions = service.get_or_create_definitions(parent_deck, db)
-    exam = definitions[exam_type]
+    exam_status = service.require_available(service.get_status(parent_deck_id, db, current_user), exam_type)
     generation_service = ExamGenerationService()
     try:
         saved_exam, questions = await generation_service.generate(
-            exam.id,
+            exam_status["exam_id"],
             db,
             current_user,
         )
@@ -118,7 +116,9 @@ def get_exam_questions(
         .where(ExamQuestion.exam_id == exam.id)
         .order_by(ExamQuestion.position.asc())
     ).all()
-    return _public_questions(exam, questions)
+    response = _public_questions(exam, questions)
+    db.commit()
+    return response
 
 
 @router.get(
@@ -132,11 +132,13 @@ def get_exam_progression(
 ):
     service = ExamService()
 
-    return service.get_status(
+    response = service.get_status(
         parent_deck_id=parent_deck_id,
         db=db,
         current_user=current_user,
     )
+    db.commit()
+    return response
 
 
 @router.get(
@@ -151,9 +153,11 @@ def get_exam(
 ):
     service = ExamService()
 
-    return service.get_exam(
+    response = service.get_exam(
         parent_deck_id=parent_deck_id,
         exam_type=exam_type,
         db=db,
         current_user=current_user,
     )
+    db.commit()
+    return response
