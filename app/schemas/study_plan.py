@@ -46,6 +46,12 @@ class StudyPlanItemResponse(BaseModel):
     chapter_id: uuid.UUID | None
     target_card_count: int | None
     position: int
+    actual_learned_count: int | None
+    shortfall_count: int | None
+    status: Literal["upcoming", "active", "completed", "missed", "partial"]
+    period: Literal["historical", "current", "future"]
+    closed_at: datetime | None
+    achieved_at: datetime | None
 
 
 class StudyPlanChapterResponse(BaseModel):
@@ -69,6 +75,8 @@ class StudyPlanResponse(BaseModel):
         description="Minimum cards/study-day needed for the requested deadline; null without a deadline or when milestone days cannot fit",
     )
     target_achievable: bool | None
+    remaining_card_count: int
+    projection_blocked: bool
     revision: int
     algorithm_version: str
     count_source: Literal["planned", "actual"]

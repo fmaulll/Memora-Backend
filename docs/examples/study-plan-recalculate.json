@@ -1,0 +1,129 @@
+{
+  "id": "02368c0e-3d1d-4f58-b6fc-577c5bedeacd",
+  "parent_deck_id": "b12ef3e8-324d-448f-9416-f441ac736276",
+  "start_date": "2026-09-21",
+  "requested_target_date": null,
+  "estimated_finish_date": "2026-09-26",
+  "timezone": "Asia/Jakarta",
+  "study_weekdays": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "daily_card_limit": 10,
+  "required_daily_card_count": null,
+  "target_achievable": null,
+  "remaining_card_count": 16,
+  "projection_blocked": false,
+  "revision": 2,
+  "algorithm_version": "chapter-plan-v2",
+  "count_source": "actual",
+  "created_at": "2026-09-23T19:07:53.688541Z",
+  "updated_at": "2026-09-23T19:07:53.705764Z",
+  "chapters": [
+    {
+      "id": "54df8a9c-43df-4c38-9c07-9dff1cd2ecf5",
+      "title": "Earlier",
+      "position": 1,
+      "generation_status": "completed",
+      "scheduled_card_count": 16
+    },
+    {
+      "id": "af2aae00-1f92-48c4-9af3-8bb24c1c16cc",
+      "title": "Later",
+      "position": 2,
+      "generation_status": "completed",
+      "scheduled_card_count": 10
+    }
+  ],
+  "items": [
+    {
+      "id": "98e58a3d-a01c-448c-acb1-0e5432c6a1ac",
+      "scheduled_date": "2026-09-21",
+      "item_type": "learn",
+      "chapter_id": "54df8a9c-43df-4c38-9c07-9dff1cd2ecf5",
+      "target_card_count": 10,
+      "position": 0,
+      "actual_learned_count": 4,
+      "shortfall_count": 6,
+      "status": "partial",
+      "period": "historical",
+      "closed_at": "2026-09-23T19:07:53.700991Z",
+      "achieved_at": null
+    },
+    {
+      "id": "fb3f489a-2405-48ee-abb4-f8fba68e2607",
+      "scheduled_date": "2026-09-22",
+      "item_type": "learn",
+      "chapter_id": "54df8a9c-43df-4c38-9c07-9dff1cd2ecf5",
+      "target_card_count": 6,
+      "position": 1,
+      "actual_learned_count": 0,
+      "shortfall_count": 6,
+      "status": "active",
+      "period": "current",
+      "closed_at": null,
+      "achieved_at": null
+    },
+    {
+      "id": "1a6b8581-97d4-4b1a-8659-f904d6a081b8",
+      "scheduled_date": "2026-09-23",
+      "item_type": "first_half_exam",
+      "chapter_id": null,
+      "target_card_count": null,
+      "position": 2,
+      "actual_learned_count": null,
+      "shortfall_count": null,
+      "status": "upcoming",
+      "period": "future",
+      "closed_at": null,
+      "achieved_at": null
+    },
+    {
+      "id": "8b0daee9-8202-4f54-b504-47814fead4da",
+      "scheduled_date": "2026-09-24",
+      "item_type": "learn",
+      "chapter_id": "af2aae00-1f92-48c4-9af3-8bb24c1c16cc",
+      "target_card_count": 10,
+      "position": 3,
+      "actual_learned_count": 0,
+      "shortfall_count": 10,
+      "status": "upcoming",
+      "period": "future",
+      "closed_at": null,
+      "achieved_at": null
+    },
+    {
+      "id": "f33c6ae6-1f42-432f-bb17-5a3c53ef8056",
+      "scheduled_date": "2026-09-25",
+      "item_type": "second_half_exam",
+      "chapter_id": null,
+      "target_card_count": null,
+      "position": 4,
+      "actual_learned_count": null,
+      "shortfall_count": null,
+      "status": "upcoming",
+      "period": "future",
+      "closed_at": null,
+      "achieved_at": null
+    },
+    {
+      "id": "6a20bbbf-179d-4fd0-bdcd-7c574d626889",
+      "scheduled_date": "2026-09-26",
+      "item_type": "final_exam",
+      "chapter_id": null,
+      "target_card_count": null,
+      "position": 5,
+      "actual_learned_count": null,
+      "shortfall_count": null,
+      "status": "upcoming",
+      "period": "future",
+      "closed_at": null,
+      "achieved_at": null
+    }
+  ]
+}

@@ -86,7 +86,7 @@ class StudyPlanAPITests(unittest.TestCase):
         self.assertEqual(self.db.scalar(select(func.count()).select_from(Exam)), 0)
         self.assertEqual(self.db.scalar(select(func.count()).select_from(UserExamProgression)), 0)
         for item in body["items"]:
-            self.assertNotIn("status", item)
+            self.assertIn("status", item)
             self.assertNotIn("completed_card_count", item)
             self.assertEqual(len(item["scheduled_date"]), 10)
 
@@ -159,12 +159,15 @@ class StudyPlanAPITests(unittest.TestCase):
                 self.assertEqual(self.create(**changes).status_code, 422)
 
     def test_default_start_uses_users_local_date(self):
-        with patch("app.services.study_plan.datetime") as clock:
+        with patch("app.services.study_calendar.datetime") as clock:
             clock.now.return_value = datetime(2026, 9, 21, 18, tzinfo=timezone.utc)
             body = self.create(start_date=None).json()
         self.assertEqual(body["start_date"], "2026-09-22")
 
     def test_generation_reconciliation_is_once_and_get_is_read_only(self):
+        clock = patch("app.services.study_plan.local_today", return_value=date(2026, 9, 21))
+        clock.start()
+        self.addCleanup(clock.stop)
         chapter = self.chapters[0]
         chapter.generation_status = "generating"
         chapter.card_count = 12
@@ -219,6 +222,9 @@ class StudyPlanAPITests(unittest.TestCase):
         )
 
     def test_ai_opt_in_creates_plan_and_worker_reconciles_once(self):
+        clock = patch("app.services.study_plan.local_today", return_value=date(2026, 9, 21))
+        clock.start()
+        self.addCleanup(clock.stop)
         request = self.generation_request()
         response = self.client.post("/ai/decks/generate", json=request)
         self.assertEqual(response.status_code, 200, response.text)

@@ -57,6 +57,10 @@ class StudyPlanItem(Base):
     __table_args__ = (
         UniqueConstraint("study_plan_id", "position", name="uq_study_plan_items_position"),
         CheckConstraint("position >= 0", name="ck_study_plan_items_position"),
+        CheckConstraint("actual_learned_count IS NULL OR (item_type = 'learn' AND closed_at IS NOT NULL "
+                        "AND actual_learned_count BETWEEN 0 AND target_card_count)",
+                        name="ck_study_plan_items_actual"),
+        CheckConstraint("achieved_at IS NULL OR item_type <> 'learn'", name="ck_study_plan_items_achievement"),
         CheckConstraint(
             "(item_type = 'learn' AND chapter_id IS NOT NULL AND target_card_count IS NOT NULL AND target_card_count > 0) "
             "OR (item_type IN ('first_half_exam', 'second_half_exam', 'final_exam') "
@@ -73,5 +77,10 @@ class StudyPlanItem(Base):
     chapter_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("decks.id", ondelete="RESTRICT"), index=True)
     target_card_count: Mapped[int | None] = mapped_column(Integer)
     position: Mapped[int] = mapped_column(Integer)
+    # Epoch is deliberately not a foreign key: a reset must not rewrite history.
+    learning_epoch: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    actual_learned_count: Mapped[int | None] = mapped_column(Integer)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    achieved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     study_plan: Mapped[StudyPlan] = relationship(back_populates="items")
