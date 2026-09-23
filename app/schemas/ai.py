@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, model_validator
 from datetime import date
 import uuid
+from app.schemas.study_plan import StudyPlanCreate, StudyPlanResponse
 
 
 class DeckPlanRequest(BaseModel):
@@ -22,7 +23,7 @@ class ChapterPlan(BaseModel):
     title: str
     description: str
     key_concepts: list[str]
-    card_count: int
+    card_count: int = Field(ge=0)
 
 
 class DeckPlanResponse(BaseModel):
@@ -107,8 +108,19 @@ class GeneratedDeckStatus(BaseModel):
 class GeneratedDeckWithTimelineResponse(BaseModel):
     deck: GeneratedDeckStatus
     timeline: StudyTimeline | None = None
+    study_plan: StudyPlanResponse | None = None
 
 class GenerateDeckRequest(BaseModel):
     plan: DeckPlanResponse
     study_purpose: str
     target_date: date | None = None
+    study_plan: StudyPlanCreate | None = None
+
+    @model_validator(mode="after")
+    def align_study_target(self):
+        if self.study_plan is not None and self.target_date is not None:
+            nested_target = self.study_plan.requested_target_date
+            if nested_target is not None and nested_target != self.target_date:
+                raise ValueError("Study plan target must match the generation target_date")
+            self.study_plan = self.study_plan.model_copy(update={"requested_target_date": self.target_date})
+        return self

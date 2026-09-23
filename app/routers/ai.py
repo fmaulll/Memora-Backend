@@ -9,8 +9,6 @@ from fastapi import (
     HTTPException,
 )
 
-from app.services.deck_generation import DeckGenerationService
-
 from app.ai.deepseek import DeepSeekService
 from app.ai.gemini import GeminiService
 from app.schemas.ai import (
@@ -43,7 +41,8 @@ from app.models.generation_job import GenerationJob
 
 from pathlib import Path
 
-from app.services.study_timeline import StudyTimelineService
+from app.services.study_timeline import ChapterInput, ScheduleResult, ScheduledItem, StudyTimelineService, timeline_summary
+from app.services.study_plan import create_plan, plan_response, plan_error
 
 router = APIRouter(
     prefix="/ai",
@@ -137,39 +136,33 @@ async def generate_deck(
         db.add(chapter_deck)
         chapter_decks.append(chapter_deck)
 
-    # Calculate total cards from the PLAN
-    total_cards = sum(
-        chapter.card_count
-        for chapter in plan.chapters
-    )
-
-    # Generate timeline immediately
-
-    timeline_service = StudyTimelineService()
-
-    timeline = timeline_service.generate(
-        total_cards=total_cards,
-        target_date=request.target_date,
-        study_purpose=request.study_purpose,
-    )
-
-    db.commit()
-
-    db.refresh(parent_deck)
-
-    for chapter_deck in chapter_decks:
-        db.refresh(chapter_deck)
-
-    generation_service = DeckGenerationService()
-
-    db.add(
-        GenerationJob(
-            parent_deck_id=parent_deck.id,
-            plan_json=plan.model_dump(mode="json"),
-            status="pending",
-        )
-    )
-    db.commit()
+    saved_plan = None
+    try:
+        db.flush()
+        if request.study_plan is not None:
+            persisted = create_plan(db, parent_deck.id, current_user.id, request.study_plan)
+            saved_plan = plan_response(db, persisted)
+            projected = ScheduleResult(
+                tuple(ScheduledItem(i.scheduled_date, i.item_type, i.chapter_id, i.target_card_count)
+                      for i in saved_plan.items),
+                saved_plan.estimated_finish_date, saved_plan.required_daily_card_count,
+            )
+            timeline = timeline_summary(projected, saved_plan.start_date)
+        else:
+            timeline = StudyTimelineService().generate(
+                total_cards=sum(ch.card_count for ch in plan.chapters),
+                target_date=request.target_date, study_purpose=request.study_purpose,
+                chapters=[ChapterInput(ch.id, ch.card_count) for ch in chapter_decks],
+            )
+        # Decks, optional schedule and job must be accepted as a single unit.
+        db.add(GenerationJob(parent_deck_id=parent_deck.id, plan_json=plan.model_dump(mode="json"), status="pending"))
+        db.commit()
+    except (ValueError, OverflowError) as error:
+        db.rollback()
+        raise plan_error(422, "invalid_study_schedule", str(error)) from error
+    except Exception:
+        db.rollback()
+        raise
 
     # Temporary response structure
     return GeneratedDeckWithTimelineResponse(
@@ -190,6 +183,7 @@ async def generate_deck(
             ],
         ),
         timeline=timeline,
+        study_plan=saved_plan,
     )
 
 

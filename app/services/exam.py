@@ -1,4 +1,3 @@
-import math
 import uuid
 
 from fastapi import HTTPException, status
@@ -11,6 +10,7 @@ from app.models.exam import Exam, UserExamProgression
 from app.models.user import User
 from app.db.database import settings
 from app.schemas.exam import ExamType
+from app.services.exam_groups import split_chapters
 
 
 class ExamService:
@@ -53,19 +53,6 @@ class ExamService:
         parent_deck: Deck,
         db: Session,
     ):
-        sub_deck_ids = db.scalars(
-            select(Deck.id)
-            .where(Deck.parent_deck_id == parent_deck.id)
-            .order_by(Deck.position.asc(), Deck.id.asc())
-        ).all()
-
-        midpoint = math.ceil(len(sub_deck_ids) / 2)
-        groups = {
-            ExamType.first_half: sub_deck_ids[:midpoint],
-            ExamType.second_half: sub_deck_ids[midpoint:],
-            ExamType.final: sub_deck_ids,
-        }
-
         definitions = {}
         for exam_type in self.exam_types:
             exam = db.scalar(
@@ -209,12 +196,12 @@ class ExamService:
                 detail="The parent deck has no sub-decks for an exam.",
             )
 
-        midpoint = math.ceil(len(sub_decks) / 2)
+        first_half, second_half = split_chapters(sub_decks)
 
         if exam_type == ExamType.first_half:
-            selected_decks = sub_decks[:midpoint]
+            selected_decks = first_half
         elif exam_type == ExamType.second_half:
-            selected_decks = sub_decks[midpoint:]
+            selected_decks = second_half
         else:
             selected_decks = sub_decks
 

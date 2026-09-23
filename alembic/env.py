@@ -14,6 +14,7 @@ from app.models.card import Card
 from app.models.study_material import StudyMaterial
 from app.models.exam import Exam, ExamAttempt, ExamQuestion, UserExamProgression
 from app.models.generation_job import GenerationJob
+from app.models.study_plan import StudyPlan, StudyPlanItem
 
 
 config = context.config

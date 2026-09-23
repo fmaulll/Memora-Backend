@@ -9,6 +9,7 @@ from app.db.database import get_db
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.user import User
+from app.services.study_plan import ensure_structure_editable
 from app.schemas.deck import (
     ChapterReorderRequest,
     ChapterGenerationStatus,
@@ -60,6 +61,8 @@ def validate_parent_deck(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A child deck cannot have another child deck.",
         )
+
+    ensure_structure_editable(db, parent.id)
 
 
 @router.post(
@@ -214,7 +217,12 @@ def update_deck(
 
     updates = data.model_dump(exclude_unset=True)
 
-    if "parent_deck_id" in updates:
+    if "parent_deck_id" in updates and updates["parent_deck_id"] != deck.parent_deck_id:
+        ensure_structure_editable(db, deck.parent_deck_id or deck.id)
+    if "position" in updates and updates["position"] != deck.position and deck.parent_deck_id:
+        ensure_structure_editable(db, deck.parent_deck_id)
+
+    if "parent_deck_id" in updates and updates["parent_deck_id"] != deck.parent_deck_id:
         validate_parent_deck(
             parent_deck_id=updates["parent_deck_id"],
             current_deck_id=deck.id,
@@ -253,6 +261,8 @@ def delete_deck(
             detail="Deck not found",
         )
 
+    if deck.parent_deck_id is not None:
+        ensure_structure_editable(db, deck.parent_deck_id)
     db.delete(deck)
     db.commit()
 
@@ -285,6 +295,8 @@ def reorder_chapters(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Parent deck not found.",
         )
+
+    ensure_structure_editable(db, parent.id)
 
     # Load every chapter belonging to this parent.
     chapters = db.scalars(

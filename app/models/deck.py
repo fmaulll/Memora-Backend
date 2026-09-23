@@ -111,3 +111,7 @@ class Deck(Base):
         back_populates="deck",
         cascade="all, delete-orphan",
     )
+    study_plan = relationship(
+        "StudyPlan", back_populates="parent_deck", uselist=False,
+        cascade="all, delete-orphan",
+    )

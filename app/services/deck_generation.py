@@ -5,6 +5,7 @@ from app.db.database import SessionLocal
 from app.models.deck import Deck
 from app.models.card import Card
 from app.schemas.ai import ChapterPlan, DeckPlanResponse
+from app.services.study_plan import reconcile_generated_plan
 
 
 class DeckGenerationService:
@@ -136,6 +137,7 @@ class DeckGenerationService:
             if parent_deck:
                 if remaining == 0:
                     parent_deck.generation_status = "completed"
+                    reconcile_generated_plan(db, parent_deck)
                 else:
                     parent_deck.generation_status = "failed"
 
