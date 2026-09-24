@@ -9,6 +9,7 @@ from app.models.exam import Exam, ExamAttempt, ExamQuestion, UserExamProgression
 from app.models.user import User
 from app.schemas.exam import ExamSubmissionRequest, ExamSubmissionResponse, ExamType
 from app.services.exam import ExamService
+from app.services.study_plan_hooks import recalculate_affected_plans
 
 
 class ExamSubmissionService:
@@ -121,6 +122,7 @@ class ExamSubmissionService:
                 passed=passed,
             )
             db.add(attempt)
+            newly_passed = passed and not getattr(progression, f"{exam.exam_type}_passed")
             self._update_progression(
                 progression,
                 exam.exam_type,
@@ -128,6 +130,8 @@ class ExamSubmissionService:
                 passed,
             )
             db.flush()
+            if newly_passed:
+                recalculate_affected_plans(db, current_user.id, {parent_deck.id}, reason="exam_passed")
             updated_status = exam_service.get_status(parent_deck.id, db, current_user)
             next_exam_type, next_unlocked, completed = self._next_status(exam.exam_type, updated_status)
             db.commit()

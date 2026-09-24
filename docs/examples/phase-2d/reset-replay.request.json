@@ -1,0 +1,13 @@
+{
+  "reset_id": "98d5924d-517f-47b5-9df0-e4c7bff10958",
+  "expected_decks": [
+    {
+      "deck_id": "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44",
+      "progress_epoch": "c454f650-317f-4663-8b5d-7ca539103c18"
+    },
+    {
+      "deck_id": "cc97dcb1-070a-4ee9-a1b1-074d9bf0dfb5",
+      "progress_epoch": "1cfb7692-7b7d-4fb6-b2b9-ee7ecd47f017"
+    }
+  ]
+}

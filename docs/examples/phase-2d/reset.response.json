@@ -1,0 +1,19 @@
+{
+  "reset_id": "98d5924d-517f-47b5-9df0-e4c7bff10958",
+  "deck_id": "b6a5af8f-ccbe-4840-8a52-efbb5c6417d2",
+  "reset_at": "2026-09-24T17:15:54.804828Z",
+  "decks": [
+    {
+      "deck_id": "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44",
+      "progress_epoch": "d22ed70f-978c-4d48-a3d6-346d134063e6",
+      "previous_epoch": "c454f650-317f-4663-8b5d-7ca539103c18",
+      "cleared_card_count": 10
+    },
+    {
+      "deck_id": "cc97dcb1-070a-4ee9-a1b1-074d9bf0dfb5",
+      "progress_epoch": "b011f8da-97a1-49f3-9bb0-6003e0c752bd",
+      "previous_epoch": "1cfb7692-7b7d-4fb6-b2b9-ee7ecd47f017",
+      "cleared_card_count": 0
+    }
+  ]
+}

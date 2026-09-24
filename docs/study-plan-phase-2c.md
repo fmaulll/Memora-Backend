@@ -1,5 +1,7 @@
 # Adaptive Study Timeline — Phase 2C
 
+This document records the Phase 2C implementation. [Phase 2D](study-plan-phase-2d.md) now adds automatic mutation hooks and replaces the generation callback described below with canonical adaptive recalculation. Manual-only statements below describe the earlier phase; GET remains read-only.
+
 Phase 2C implements explicit, deterministic adaptation without AI. Current remaining work uses Phase 2B's canonical aggregate over current cards and the owner's non-null `card_progress.learned_at`. Historical performance uses preserved targets plus evidence of accepted learning. No Swift hooks, notification work, automatic progress/content hooks, or health labels are implemented.
 
 ## Migration and deployment

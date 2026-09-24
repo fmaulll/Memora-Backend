@@ -1,0 +1,14 @@
+{
+  "exam_id": "2b3bcad4-a85d-4cd3-b1e9-c219b085c524",
+  "exam_type": "first_half",
+  "total_questions": 1,
+  "correct_answers": 1,
+  "incorrect_answers": 0,
+  "score": 100.0,
+  "passing_score": 70.0,
+  "passed": true,
+  "attempt_number": 1,
+  "next_exam_type": "second_half",
+  "next_exam_unlocked": false,
+  "completed": false
+}

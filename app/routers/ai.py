@@ -43,6 +43,7 @@ from pathlib import Path
 
 from app.services.study_timeline import ChapterInput, ScheduleResult, ScheduledItem, StudyTimelineService, timeline_summary
 from app.services.study_plan import create_plan, plan_response, plan_error
+from app.services.study_progress import lock_progress_user
 
 router = APIRouter(
     prefix="/ai",
@@ -197,6 +198,7 @@ async def retry_deck_generation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    lock_progress_user(db, current_user.id)
     parent_deck = db.scalar(
         select(Deck).where(
             Deck.id == deck_id,
@@ -237,15 +239,17 @@ async def retry_deck_generation(
             chapter_deck.generation_status = "pending"
 
     parent_deck.generation_status = "generating"
-    db.commit()
-    db.refresh(parent_deck)
 
     job.status = "pending"
     job.last_error = None
     job.locked_at = None
     job.completed_at = None
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     return GeneratedDeckWithTimelineResponse(
         deck=GeneratedDeckStatus(

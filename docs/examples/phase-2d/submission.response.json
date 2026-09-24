@@ -1,0 +1,18 @@
+{
+  "session_id": "afe611ce-8eda-4ee9-bc0c-0ad42ff3f169",
+  "completed_at": "2026-09-21T11:00:00Z",
+  "submitted_at": "2026-09-24T17:15:54.674212Z",
+  "decks": [
+    {
+      "deck_id": "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44",
+      "progress_epoch": "c454f650-317f-4663-8b5d-7ca539103c18",
+      "accepted_card_ids": [
+        "12078120-7a40-44bc-bad5-f30e430ba0cf",
+        "19824a2f-6e12-4860-a82c-742ae7c5782f",
+        "78bf251f-d819-44ad-9713-85f963cb9d00",
+        "9a9b580c-461d-4a72-b0ff-16c61181d804"
+      ],
+      "already_learned_card_ids": []
+    }
+  ]
+}

@@ -1,0 +1,1848 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Memora API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/decks/{parent_deck_id}/exams/{exam_type}/generate": {
+      "post": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Generate Exam Questions",
+        "operationId": "generate_exam_questions_decks__parent_deck_id__exams__exam_type__generate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "parent_deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Parent Deck Id"
+            }
+          },
+          {
+            "name": "exam_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExamType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamQuestionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{parent_deck_id}/exams": {
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get Exam Progression",
+        "operationId": "get_exam_progression_decks__parent_deck_id__exams_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "parent_deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Parent Deck Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamProgressionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{parent_deck_id}/exams/{exam_type}": {
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get Exam",
+        "operationId": "get_exam_decks__parent_deck_id__exams__exam_type__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "parent_deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Parent Deck Id"
+            }
+          },
+          {
+            "name": "exam_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ExamType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exams/{exam_id}/submit": {
+      "post": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Submit Exam",
+        "operationId": "submit_exam_exams__exam_id__submit_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "exam_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Exam Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamSubmissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/exams/{exam_id}": {
+      "get": {
+        "tags": [
+          "Exams"
+        ],
+        "summary": "Get Exam Questions",
+        "operationId": "get_exam_questions_exams__exam_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "exam_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Exam Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamQuestionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{deck_id}/study-plan": {
+      "post": {
+        "tags": [
+          "Study plans"
+        ],
+        "summary": "Create Study Plan",
+        "operationId": "create_study_plan_decks__deck_id__study_plan_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudyPlanCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Study plans"
+        ],
+        "summary": "Get Study Plan",
+        "operationId": "get_study_plan_decks__deck_id__study_plan_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{deck_id}/study-plan/recalculate": {
+      "post": {
+        "tags": [
+          "Study plans"
+        ],
+        "summary": "Recalculate Study Plan",
+        "operationId": "recalculate_study_plan_decks__deck_id__study_plan_recalculate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyPlanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decks/{deck_id}/study-progress": {
+      "get": {
+        "tags": [
+          "Study progress"
+        ],
+        "summary": "Get Study Progress",
+        "operationId": "get_study_progress_decks__deck_id__study_progress_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyProgressResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/study/progress/submissions": {
+      "post": {
+        "tags": [
+          "Study progress"
+        ],
+        "summary": "Submit Study Progress",
+        "operationId": "submit_study_progress_study_progress_submissions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudyProgressSubmission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyProgressSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/decks/{deck_id}/study-progress/reset": {
+      "post": {
+        "tags": [
+          "Study progress"
+        ],
+        "summary": "Reset Study Progress",
+        "operationId": "reset_study_progress_decks__deck_id__study_progress_reset_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgressResetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CardLearningFact": {
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Card Id"
+          },
+          "learned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learned At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "card_id",
+          "learned_at"
+        ],
+        "title": "CardLearningFact"
+      },
+      "CardResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "front": {
+            "type": "string",
+            "title": "Front"
+          },
+          "back": {
+            "type": "string",
+            "title": "Back"
+          },
+          "front_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front Image Url"
+          },
+          "back_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back Image Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "deck_id",
+          "front",
+          "back",
+          "front_image_url",
+          "back_image_url",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CardResponse"
+      },
+      "DeckEpoch": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "progress_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Progress Epoch"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deck_id",
+          "progress_epoch"
+        ],
+        "title": "DeckEpoch"
+      },
+      "DeckLearnedTransitions": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "progress_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Progress Epoch"
+          },
+          "learned_cards": {
+            "items": {
+              "$ref": "#/components/schemas/LearnedTransition"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Learned Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deck_id",
+          "progress_epoch",
+          "learned_cards"
+        ],
+        "title": "DeckLearnedTransitions"
+      },
+      "DeckLearningFacts": {
+        "properties": {
+          "learned_card_count": {
+            "type": "integer",
+            "title": "Learned Card Count"
+          },
+          "total_card_count": {
+            "type": "integer",
+            "title": "Total Card Count"
+          },
+          "completion_percentage": {
+            "type": "number",
+            "title": "Completion Percentage"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "progress_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Progress Epoch"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "parent_deck_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Deck Id"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "generation_status": {
+            "type": "string",
+            "title": "Generation Status"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/CardLearningFact"
+            },
+            "type": "array",
+            "title": "Cards"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "learned_card_count",
+          "total_card_count",
+          "completion_percentage",
+          "completed",
+          "deck_id",
+          "progress_epoch",
+          "title",
+          "parent_deck_id",
+          "position",
+          "generation_status",
+          "cards"
+        ],
+        "title": "DeckLearningFacts"
+      },
+      "DeckResetResult": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "progress_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Progress Epoch"
+          },
+          "previous_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Previous Epoch"
+          },
+          "cleared_card_count": {
+            "type": "integer",
+            "title": "Cleared Card Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deck_id",
+          "progress_epoch",
+          "previous_epoch",
+          "cleared_card_count"
+        ],
+        "title": "DeckResetResult"
+      },
+      "DeckSubmissionResult": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "progress_epoch": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Progress Epoch"
+          },
+          "accepted_card_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Accepted Card Ids"
+          },
+          "already_learned_card_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Already Learned Card Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deck_id",
+          "progress_epoch",
+          "accepted_card_ids",
+          "already_learned_card_ids"
+        ],
+        "title": "DeckSubmissionResult"
+      },
+      "ExamAnswer": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Question Id"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "answer"
+        ],
+        "title": "ExamAnswer"
+      },
+      "ExamProgressionResponse": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/ExamStatusResponse"
+            },
+            "type": "array",
+            "title": "Exams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deck_id",
+          "exams"
+        ],
+        "title": "ExamProgressionResponse"
+      },
+      "ExamQuestionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "question_type": {
+            "type": "string",
+            "title": "Question Type"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "position",
+          "question_type",
+          "question",
+          "options"
+        ],
+        "title": "ExamQuestionResponse"
+      },
+      "ExamQuestionsResponse": {
+        "properties": {
+          "exam_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Exam Id"
+          },
+          "exam_type": {
+            "$ref": "#/components/schemas/ExamType"
+          },
+          "question_count": {
+            "type": "integer",
+            "title": "Question Count"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/ExamQuestionResponse"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exam_id",
+          "exam_type",
+          "question_count",
+          "questions"
+        ],
+        "title": "ExamQuestionsResponse"
+      },
+      "ExamResponse": {
+        "properties": {
+          "parent_deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Parent Deck Id"
+          },
+          "exam_type": {
+            "$ref": "#/components/schemas/ExamType"
+          },
+          "sub_deck_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Sub Deck Ids"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/CardResponse"
+            },
+            "type": "array",
+            "title": "Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parent_deck_id",
+          "exam_type",
+          "sub_deck_ids",
+          "cards"
+        ],
+        "title": "ExamResponse"
+      },
+      "ExamStatusResponse": {
+        "properties": {
+          "exam_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Id"
+          },
+          "exam_type": {
+            "$ref": "#/components/schemas/ExamType"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "locked",
+              "unlocked",
+              "completed",
+              "not_applicable"
+            ],
+            "title": "Status"
+          },
+          "applicable": {
+            "type": "boolean",
+            "title": "Applicable"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "chapter_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Chapter Ids"
+          },
+          "best_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Score"
+          },
+          "attempt_count": {
+            "type": "integer",
+            "title": "Attempt Count"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exam_id",
+          "exam_type",
+          "status",
+          "applicable",
+          "available",
+          "completed",
+          "passed",
+          "chapter_ids",
+          "best_score",
+          "attempt_count",
+          "completed_at"
+        ],
+        "title": "ExamStatusResponse"
+      },
+      "ExamSubmissionRequest": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/ExamAnswer"
+            },
+            "type": "array",
+            "title": "Answers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answers"
+        ],
+        "title": "ExamSubmissionRequest"
+      },
+      "ExamSubmissionResponse": {
+        "properties": {
+          "exam_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Exam Id"
+          },
+          "exam_type": {
+            "$ref": "#/components/schemas/ExamType"
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "correct_answers": {
+            "type": "integer",
+            "title": "Correct Answers"
+          },
+          "incorrect_answers": {
+            "type": "integer",
+            "title": "Incorrect Answers"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "passing_score": {
+            "type": "number",
+            "title": "Passing Score"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "attempt_number": {
+            "type": "integer",
+            "title": "Attempt Number"
+          },
+          "next_exam_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExamType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_exam_unlocked": {
+            "type": "boolean",
+            "title": "Next Exam Unlocked"
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exam_id",
+          "exam_type",
+          "total_questions",
+          "correct_answers",
+          "incorrect_answers",
+          "score",
+          "passing_score",
+          "passed",
+          "attempt_number",
+          "next_exam_type",
+          "next_exam_unlocked",
+          "completed"
+        ],
+        "title": "ExamSubmissionResponse"
+      },
+      "ExamType": {
+        "type": "string",
+        "enum": [
+          "first_half",
+          "second_half",
+          "final"
+        ],
+        "title": "ExamType"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LearnedTransition": {
+        "properties": {
+          "card_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Card Id"
+          },
+          "phase": {
+            "type": "string",
+            "const": "review",
+            "title": "Phase"
+          },
+          "answer": {
+            "type": "string",
+            "const": "got_it",
+            "title": "Answer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "card_id",
+          "phase",
+          "answer"
+        ],
+        "title": "LearnedTransition"
+      },
+      "ProgressResetRequest": {
+        "properties": {
+          "reset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reset Id"
+          },
+          "expected_decks": {
+            "items": {
+              "$ref": "#/components/schemas/DeckEpoch"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Expected Decks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reset_id",
+          "expected_decks"
+        ],
+        "title": "ProgressResetRequest"
+      },
+      "ProgressResetResponse": {
+        "properties": {
+          "reset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reset Id"
+          },
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "reset_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reset At"
+          },
+          "decks": {
+            "items": {
+              "$ref": "#/components/schemas/DeckResetResult"
+            },
+            "type": "array",
+            "title": "Decks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reset_id",
+          "deck_id",
+          "reset_at",
+          "decks"
+        ],
+        "title": "ProgressResetResponse"
+      },
+      "ProgressSummary": {
+        "properties": {
+          "total_deck_count": {
+            "type": "integer",
+            "title": "Total Deck Count"
+          },
+          "completed_deck_count": {
+            "type": "integer",
+            "title": "Completed Deck Count"
+          },
+          "learned_card_count": {
+            "type": "integer",
+            "title": "Learned Card Count"
+          },
+          "total_card_count": {
+            "type": "integer",
+            "title": "Total Card Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_deck_count",
+          "completed_deck_count",
+          "learned_card_count",
+          "total_card_count"
+        ],
+        "title": "ProgressSummary"
+      },
+      "StudyPlanChapterResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "generation_status": {
+            "type": "string",
+            "title": "Generation Status"
+          },
+          "scheduled_card_count": {
+            "type": "integer",
+            "title": "Scheduled Card Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "position",
+          "generation_status",
+          "scheduled_card_count"
+        ],
+        "title": "StudyPlanChapterResponse"
+      },
+      "StudyPlanCreate": {
+        "properties": {
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "requested_target_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Target Date"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Timezone"
+          },
+          "study_weekdays": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 7,
+            "minItems": 1,
+            "title": "Study Weekdays",
+            "description": "Allowed local weekdays: Monday=0, Sunday=6"
+          },
+          "daily_card_limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Daily Card Limit",
+            "default": 20
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "timezone"
+        ],
+        "title": "StudyPlanCreate"
+      },
+      "StudyPlanItemResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date"
+          },
+          "item_type": {
+            "type": "string",
+            "enum": [
+              "learn",
+              "first_half_exam",
+              "second_half_exam",
+              "final_exam"
+            ],
+            "title": "Item Type"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "target_card_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Card Count"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "actual_learned_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Learned Count"
+          },
+          "shortfall_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortfall Count"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "upcoming",
+              "active",
+              "completed",
+              "missed",
+              "partial"
+            ],
+            "title": "Status"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "historical",
+              "current",
+              "future"
+            ],
+            "title": "Period"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "achieved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Achieved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "scheduled_date",
+          "item_type",
+          "chapter_id",
+          "target_card_count",
+          "position",
+          "actual_learned_count",
+          "shortfall_count",
+          "status",
+          "period",
+          "closed_at",
+          "achieved_at"
+        ],
+        "title": "StudyPlanItemResponse"
+      },
+      "StudyPlanResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "parent_deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Parent Deck Id"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "requested_target_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Target Date"
+          },
+          "estimated_finish_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Estimated Finish Date"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "study_weekdays": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Study Weekdays"
+          },
+          "daily_card_limit": {
+            "type": "integer",
+            "title": "Daily Card Limit"
+          },
+          "required_daily_card_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Daily Card Count",
+            "description": "Minimum cards/study-day needed for the requested deadline; null without a deadline or when milestone days cannot fit"
+          },
+          "target_achievable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Achievable"
+          },
+          "remaining_card_count": {
+            "type": "integer",
+            "title": "Remaining Card Count"
+          },
+          "projection_blocked": {
+            "type": "boolean",
+            "title": "Projection Blocked"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "algorithm_version": {
+            "type": "string",
+            "title": "Algorithm Version"
+          },
+          "count_source": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "actual"
+            ],
+            "title": "Count Source"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/StudyPlanChapterResponse"
+            },
+            "type": "array",
+            "title": "Chapters"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StudyPlanItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "parent_deck_id",
+          "start_date",
+          "requested_target_date",
+          "estimated_finish_date",
+          "timezone",
+          "study_weekdays",
+          "daily_card_limit",
+          "required_daily_card_count",
+          "target_achievable",
+          "remaining_card_count",
+          "projection_blocked",
+          "revision",
+          "algorithm_version",
+          "count_source",
+          "created_at",
+          "updated_at",
+          "chapters",
+          "items"
+        ],
+        "title": "StudyPlanResponse"
+      },
+      "StudyProgressResponse": {
+        "properties": {
+          "deck_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Deck Id"
+          },
+          "decks": {
+            "items": {
+              "$ref": "#/components/schemas/DeckLearningFacts"
+            },
+            "type": "array",
+            "title": "Decks"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ProgressSummary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deck_id",
+          "decks",
+          "summary"
+        ],
+        "title": "StudyProgressResponse"
+      },
+      "StudyProgressSubmission": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          },
+          "decks": {
+            "items": {
+              "$ref": "#/components/schemas/DeckLearnedTransitions"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Decks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_id",
+          "completed_at",
+          "decks"
+        ],
+        "title": "StudyProgressSubmission"
+      },
+      "StudyProgressSubmissionResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At"
+          },
+          "decks": {
+            "items": {
+              "$ref": "#/components/schemas/DeckSubmissionResult"
+            },
+            "type": "array",
+            "title": "Decks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "completed_at",
+          "submitted_at",
+          "decks"
+        ],
+        "title": "StudyProgressSubmissionResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

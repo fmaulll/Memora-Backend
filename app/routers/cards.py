@@ -15,6 +15,8 @@ from app.schemas.card import (
     CardResponse,
     CardUpdate,
 )
+from app.services.study_progress import lock_progress_user
+from app.services.study_plan_hooks import plan_roots_for_decks, recalculate_affected_plans
 
 
 router = APIRouter(
@@ -53,6 +55,7 @@ def create_or_update_cards_bulk(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    lock_progress_user(db, current_user.id)
     # Make sure the deck belongs to the current user
     deck = (
         db.query(Deck)
@@ -82,6 +85,8 @@ def create_or_update_cards_bulk(
     }
 
     incoming_ids = set()
+    added = False
+    removed = False
 
     # Insert / update
     for card_data in data.cards:
@@ -98,6 +103,7 @@ def create_or_update_cards_bulk(
             existing.back_image_url = card_data.back_image_url
 
         else:
+            added = True
             # INSERT
             new_card = Card(
                 id=card_data.id,
@@ -114,9 +120,17 @@ def create_or_update_cards_bulk(
     for existing in existing_cards:
 
         if existing.id not in incoming_ids:
+            removed = True
             db.delete(existing)
 
-    db.commit()
+    try:
+        if added or removed:
+            reason = "cards_replaced" if added and removed else "card_added" if added else "card_deleted"
+            recalculate_affected_plans(db, current_user.id, plan_roots_for_decks([deck]), reason=reason)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     # Return the current server state
     return (
@@ -136,7 +150,8 @@ def create_card(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    get_user_deck(deck_id, current_user, db)
+    lock_progress_user(db, current_user.id)
+    deck = get_user_deck(deck_id, current_user, db)
 
     card = Card(
         id=data.id,
@@ -148,7 +163,12 @@ def create_card(
     )
 
     db.add(card)
-    db.commit()
+    try:
+        recalculate_affected_plans(db, current_user.id, plan_roots_for_decks([deck]), reason="card_added")
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(card)
 
     return card
@@ -246,6 +266,7 @@ def delete_card(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    lock_progress_user(db, current_user.id)
     card = db.scalar(
         select(Card)
         .join(Deck)
@@ -261,5 +282,11 @@ def delete_card(
             detail="Card not found",
         )
 
+    deck = get_user_deck(card.deck_id, current_user, db)
     db.delete(card)
-    db.commit()
+    try:
+        recalculate_affected_plans(db, current_user.id, plan_roots_for_decks([deck]), reason="card_deleted")
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise

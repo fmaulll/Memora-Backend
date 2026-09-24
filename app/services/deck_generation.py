@@ -1,4 +1,7 @@
 import uuid
+import logging
+
+from sqlalchemy import select
 
 from app.ai.deepseek import DeepSeekService
 from app.db.database import SessionLocal
@@ -6,6 +9,9 @@ from app.models.deck import Deck
 from app.models.card import Card
 from app.schemas.ai import ChapterPlan, DeckPlanResponse
 from app.services.study_plan import reconcile_generated_plan
+from app.services.study_progress import lock_progress_user
+
+logger = logging.getLogger(__name__)
 
 
 class DeckGenerationService:
@@ -28,11 +34,8 @@ class DeckGenerationService:
                 )
             except Exception as error:
                 last_error = error
-                print(
-                    f"Failed generating chapter "
-                    f"'{chapter_plan.title}' "
-                    f"(attempt {attempt}/{self.max_attempts}): {error}"
-                )
+                logger.warning("chapter_generation_retry attempt=%s max_attempts=%s error_type=%s",
+                               attempt, self.max_attempts, type(error).__name__)
 
         raise last_error
 
@@ -46,27 +49,32 @@ class DeckGenerationService:
         try:
             parent_deck = db.get(Deck, parent_deck_id)
 
-            if not parent_deck:
+            if not parent_deck or parent_deck.generation_status == "completed":
                 return
 
+            user_id = parent_deck.user_id
             ai_service = DeepSeekService()
 
             # Generate chapters one by one
             for chapter_plan in plan.chapters:
-
+                lock_progress_user(db, user_id)
                 chapter_deck = (
                     db.query(Deck)
                     .filter(
                         Deck.parent_deck_id == parent_deck_id,
+                        Deck.user_id == user_id,
                         Deck.title == chapter_plan.title,
                     )
+                    .populate_existing()
                     .first()
                 )
 
                 if not chapter_deck:
+                    db.commit()
                     continue
 
                 if chapter_deck.generation_status == "completed":
+                    db.commit()
                     continue
 
                 chapter_plan = ChapterPlan(
@@ -85,6 +93,7 @@ class DeckGenerationService:
                 )
 
                 # Mark chapter as generating
+                chapter_id = chapter_deck.id
                 chapter_deck.generation_status = "generating"
                 db.commit()
 
@@ -95,6 +104,11 @@ class DeckGenerationService:
                         chapter_plan,
                     )
 
+                    lock_progress_user(db, user_id)
+                    chapter_deck = db.get(Deck, chapter_id, populate_existing=True)
+                    if chapter_deck is None or chapter_deck.generation_status == "completed":
+                        db.commit()
+                        continue
                     for generated_card in generated_chapter.cards:
                         card = Card(
                             deck_id=chapter_deck.id,
@@ -109,39 +123,48 @@ class DeckGenerationService:
 
                 except Exception:
                     db.rollback()
-
+                    lock_progress_user(db, user_id)
                     chapter_deck = db.get(
                         Deck,
-                        chapter_deck.id,
+                        chapter_id,
+                        populate_existing=True,
                     )
 
-                    if chapter_deck:
+                    if chapter_deck and chapter_deck.generation_status != "completed":
                         chapter_deck.generation_status = "failed"
-                        db.commit()
+                    db.commit()
 
-            # Check final status
-            remaining = (
-                db.query(Deck)
-                .filter(
-                    Deck.parent_deck_id == parent_deck_id,
-                    Deck.generation_status != "completed",
-                )
-                .count()
-            )
-
-            parent_deck = db.get(
-                Deck,
-                parent_deck_id,
-            )
-
-            if parent_deck:
-                if remaining == 0:
-                    parent_deck.generation_status = "completed"
-                    reconcile_generated_plan(db, parent_deck)
-                else:
-                    parent_deck.generation_status = "failed"
-
-                db.commit()
+            self._finalize(db, parent_deck_id, user_id)
 
         finally:
             db.close()
+
+    def _finalize(self, db, parent_deck_id, user_id):
+        """Short final transaction; chapter data is already durable, with no AI lock held."""
+        try:
+            lock_progress_user(db, user_id)
+            parent = db.get(Deck, parent_deck_id, populate_existing=True)
+            if parent is None or parent.generation_status == "completed":
+                db.commit()
+                return
+            unfinished = db.scalar(select(Deck.id).where(
+                Deck.parent_deck_id == parent_deck_id, Deck.user_id == user_id,
+                Deck.generation_status != "completed",
+            ).limit(1))
+            parent.generation_status = "failed" if unfinished else "completed"
+            if unfinished is None:
+                reconcile_generated_plan(db, parent)
+            db.commit()
+        except Exception as error:
+            db.rollback()
+            # Keep completed chapter/card commits. The existing worker records this
+            # failure on its job; retry skips those chapters and retries finalization.
+            lock_progress_user(db, user_id)
+            parent = db.get(Deck, parent_deck_id, populate_existing=True)
+            if parent is not None:
+                parent.generation_status = "failed"
+            db.commit()
+            logger.error("generation_finalization_failed parent_deck_id=%s error_type=%s",
+                         parent_deck_id, type(error).__name__)
+            raise RuntimeError("Study plan finalization failed; completed chapters are retained. "
+                               "Retry generation to reconcile without regenerating completed chapters.") from error

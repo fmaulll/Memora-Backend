@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "code": "stale_progress_epoch",
+    "message": "Progress was reset; old offline learning must not be relabeled with a new epoch"
+  }
+}

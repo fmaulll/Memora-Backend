@@ -277,14 +277,17 @@ class StudyProgressAPITests(unittest.TestCase):
         self.assertEqual(facts["generation_status"], "generating")
         self.assertTrue(all(card["learned_at"] is None for card in facts["cards"]))
 
-    def test_phase_2a_does_not_mutate_timeline_or_exam_status(self):
+    def test_automatic_adaptation_preserves_exam_rules_and_reset_workload(self):
         plan = create_plan(self.db, self.parent.id, self.user.id, StudyPlanCreate(timezone="Asia/Jakarta"))
         self.db.commit()
         before_plan = plan_response(self.db, plan).model_dump(mode="json")
         before_exams = ExamService().get_status(self.parent.id, self.db, self.user)
         self.submit(self.payload(self.chapter_a, self.chapter_b))
         self.reset()
-        self.assertEqual(plan_response(self.db, plan).model_dump(mode="json"), before_plan)
+        after_plan = plan_response(self.db, plan).model_dump(mode="json")
+        self.assertEqual(after_plan["remaining_card_count"], 6)
+        self.assertEqual(after_plan["requested_target_date"], before_plan["requested_target_date"])
+        self.assertGreater(after_plan["revision"], before_plan["revision"])
         self.assertEqual(ExamService().get_status(self.parent.id, self.db, self.user), before_exams)
         self.assertEqual(self.db.scalar(select(func.count()).select_from(StudyPlan)), 1)
 

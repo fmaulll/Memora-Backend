@@ -301,39 +301,10 @@ def recalculate_plan(db: Session, deck_id: uuid.UUID, user_id: uuid.UUID) -> Stu
 
 
 def reconcile_generated_plan(db: Session, parent: Deck) -> None:
-    """One planned→actual reconciliation after generation, never a progress update.
+    """Compatibility entry point; generation uses the same canonical adaptation."""
+    from app.services.study_plan_hooks import recalculate_affected_plans
 
-    Correct the initial content forecast only before any targets become historical.
-    Older plans must use explicit adaptation to preserve their past projections.
-    """
-    db.scalar(select(Deck).where(Deck.id == parent.id).with_for_update())
-    plan = db.scalar(select(StudyPlan).where(StudyPlan.parent_deck_id == parent.id))
-    if plan is None or plan.count_source == "actual":
-        return
-    if any(item.closed_at or item.scheduled_date < local_today(plan.timezone) for item in plan.items):
-        # A generation callback cannot replace historical targets. The explicit
-        # adaptive operation will reconcile actual content and close those days.
-        return
-    chapters = ordered_chapters(db, parent)
-    if not chapters or any(ch.generation_status != "completed" for ch in chapters):
-        return
-    inputs, _ = chapter_inputs(db, chapters)
-    settings = StudyPlanCreate(
-        start_date=plan.start_date, requested_target_date=plan.requested_target_date,
-        timezone=plan.timezone, study_weekdays=plan.study_weekdays, daily_card_limit=plan.daily_card_limit,
-    )
-    result = schedule_for(inputs, plan.start_date, settings)
-    old_shape = [(item.scheduled_date, item.item_type, item.chapter_id, item.target_card_count) for item in plan.items]
-    new_shape = [(item.scheduled_date, item.item_type, item.chapter_id, item.target_card_count) for item in result.items]
-    if old_shape != new_shape:
-        plan.items.clear()
-        db.flush()  # Delete old positions before inserting their replacements.
-        plan.items = make_items(result, chapters)
-    plan.estimated_finish_date = result.estimated_finish_date
-    plan.required_daily_card_count = result.required_daily_card_count
-    plan.count_source = "actual"
-    plan.revision += 1
-    db.flush()
+    recalculate_affected_plans(db, parent.user_id, {parent.id}, reason="generation_completed")
 
 
 def ensure_structure_editable(db: Session, parent_id: uuid.UUID) -> None:

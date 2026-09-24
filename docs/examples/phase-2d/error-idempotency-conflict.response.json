@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "code": "idempotency_conflict",
+    "message": "This operation UUID was already used with different content"
+  }
+}

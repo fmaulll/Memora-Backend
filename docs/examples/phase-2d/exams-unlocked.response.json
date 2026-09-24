@@ -1,0 +1,51 @@
+{
+  "deck_id": "b6a5af8f-ccbe-4840-8a52-efbb5c6417d2",
+  "exams": [
+    {
+      "exam_id": "2b3bcad4-a85d-4cd3-b1e9-c219b085c524",
+      "exam_type": "first_half",
+      "status": "unlocked",
+      "applicable": true,
+      "available": true,
+      "completed": false,
+      "passed": false,
+      "chapter_ids": [
+        "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44"
+      ],
+      "best_score": null,
+      "attempt_count": 0,
+      "completed_at": null
+    },
+    {
+      "exam_id": "d0f914b3-a6c5-443e-b720-8c6bc27cf809",
+      "exam_type": "second_half",
+      "status": "locked",
+      "applicable": true,
+      "available": false,
+      "completed": false,
+      "passed": false,
+      "chapter_ids": [
+        "cc97dcb1-070a-4ee9-a1b1-074d9bf0dfb5"
+      ],
+      "best_score": null,
+      "attempt_count": 0,
+      "completed_at": null
+    },
+    {
+      "exam_id": "30d0331a-b42a-4740-ac5e-066f1545b0d2",
+      "exam_type": "final",
+      "status": "locked",
+      "applicable": true,
+      "available": false,
+      "completed": false,
+      "passed": false,
+      "chapter_ids": [
+        "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44",
+        "cc97dcb1-070a-4ee9-a1b1-074d9bf0dfb5"
+      ],
+      "best_score": null,
+      "attempt_count": 0,
+      "completed_at": null
+    }
+  ]
+}

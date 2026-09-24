@@ -20,6 +20,7 @@ from app.schemas.study_progress import (
 )
 from app.services.chapters import ordered_chapters
 from app.services.chapter_progress import get_chapter_progress
+from app.services.study_plan_hooks import plan_roots_for_decks, recalculate_affected_plans
 
 MAX_CLOCK_SKEW = timedelta(minutes=5)
 
@@ -140,6 +141,10 @@ def submit_progress(db: Session, user_id: uuid.UUID,
         decks=_apply_learning(db, user_id, request, card_ids),
     )
     _remember(db, user_id, request.session_id, "submission", fingerprint, response)
+    changed_ids = {result.deck_id for result in response.decks if result.accepted_card_ids}
+    if changed_ids:
+        recalculate_affected_plans(db, user_id, plan_roots_for_decks([deck for deck in decks if deck.id in changed_ids]),
+                                   reason="learning_progress")
     return response
 
 
@@ -177,6 +182,7 @@ def reset_progress(db: Session, user_id: uuid.UUID, deck_id: uuid.UUID,
         decks=_clear_learning(db, user_id, decks),
     )
     _remember(db, user_id, request.reset_id, "reset", fingerprint, response)
+    recalculate_affected_plans(db, user_id, plan_roots_for_decks(decks), reason="progress_reset")
     return response
 
 

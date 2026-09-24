@@ -1,0 +1,189 @@
+{
+  "source": "Actual FastAPI TestClient responses against disposable in-memory SQLite fixtures; not the running API. Scheduler local_today fixed at 2026-09-22. Authentication overridden for success/business-error fixtures; invalid authentication captured from the real app. No AI requests were made.",
+  "examples": [
+    {
+      "name": "submission",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 200,
+      "response": "submission.response.json",
+      "request": "submission.request.json"
+    },
+    {
+      "name": "progress",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-progress",
+      "status": 200,
+      "response": "progress.response.json"
+    },
+    {
+      "name": "recalculate",
+      "method": "POST",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-plan/recalculate",
+      "status": 200,
+      "response": "recalculate.response.json"
+    },
+    {
+      "name": "plan",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-plan",
+      "status": 200,
+      "response": "plan.response.json"
+    },
+    {
+      "name": "submission-replay",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 200,
+      "response": "submission-replay.response.json",
+      "request": "submission-replay.request.json"
+    },
+    {
+      "name": "submission-already-learned",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 200,
+      "response": "submission-already-learned.response.json",
+      "request": "submission-already-learned.request.json"
+    },
+    {
+      "name": "error-idempotency-conflict",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 409,
+      "response": "error-idempotency-conflict.response.json",
+      "request": "error-idempotency-conflict.request.json"
+    },
+    {
+      "name": "error-validation",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 422,
+      "response": "error-validation.response.json",
+      "request": "error-validation.request.json"
+    },
+    {
+      "name": "exams-locked",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams",
+      "status": 200,
+      "response": "exams-locked.response.json"
+    },
+    {
+      "name": "error-exam-locked",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams/first_half",
+      "status": 403,
+      "response": "error-exam-locked.response.json"
+    },
+    {
+      "name": "progress-chapter-completed",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-progress",
+      "status": 200,
+      "response": "progress-chapter-completed.response.json"
+    },
+    {
+      "name": "exams-unlocked",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams",
+      "status": 200,
+      "response": "exams-unlocked.response.json"
+    },
+    {
+      "name": "exam-cards",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams/first_half",
+      "status": 200,
+      "response": "exam-cards.response.json"
+    },
+    {
+      "name": "exam-questions",
+      "method": "GET",
+      "path": "/exams/2b3bcad4-a85d-4cd3-b1e9-c219b085c524",
+      "status": 200,
+      "response": "exam-questions.response.json"
+    },
+    {
+      "name": "exam-generate-existing",
+      "method": "POST",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams/first_half/generate",
+      "status": 200,
+      "response": "exam-generate-existing.response.json"
+    },
+    {
+      "name": "exam-submission",
+      "method": "POST",
+      "path": "/exams/2b3bcad4-a85d-4cd3-b1e9-c219b085c524/submit",
+      "status": 200,
+      "response": "exam-submission.response.json",
+      "request": "exam-submission.request.json"
+    },
+    {
+      "name": "exams-passed",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/exams",
+      "status": 200,
+      "response": "exams-passed.response.json"
+    },
+    {
+      "name": "reset",
+      "method": "POST",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-progress/reset",
+      "status": 200,
+      "response": "reset.response.json",
+      "request": "reset.request.json"
+    },
+    {
+      "name": "reset-replay",
+      "method": "POST",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-progress/reset",
+      "status": 200,
+      "response": "reset-replay.response.json",
+      "request": "reset-replay.request.json"
+    },
+    {
+      "name": "error-stale-epoch",
+      "method": "POST",
+      "path": "/study/progress/submissions",
+      "status": 409,
+      "response": "error-stale-epoch.response.json",
+      "request": "error-stale-epoch.request.json"
+    },
+    {
+      "name": "progress-after-reset",
+      "method": "GET",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-progress",
+      "status": 200,
+      "response": "progress-after-reset.response.json"
+    },
+    {
+      "name": "error-content-not-ready",
+      "method": "POST",
+      "path": "/decks/b6a5af8f-ccbe-4840-8a52-efbb5c6417d2/study-plan/recalculate",
+      "status": 409,
+      "response": "error-content-not-ready.response.json"
+    },
+    {
+      "name": "exams-one-chapter",
+      "method": "GET",
+      "path": "/decks/37a03244-3df2-4a4a-9653-4b4574e23096/exams",
+      "status": 200,
+      "response": "exams-one-chapter.response.json"
+    },
+    {
+      "name": "error-exam-not-found",
+      "method": "GET",
+      "path": "/exams/d9e96d00-3364-41c4-8d89-632f37f4567e",
+      "status": 404,
+      "response": "error-exam-not-found.response.json"
+    },
+    {
+      "name": "error-authentication",
+      "method": "GET",
+      "path": "/decks/cc8a6477-362e-46c8-a08c-ef253717f8aa/study-progress",
+      "status": 401,
+      "response": "error-authentication.response.json"
+    }
+  ]
+}

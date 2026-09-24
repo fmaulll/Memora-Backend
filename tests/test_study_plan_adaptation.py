@@ -138,6 +138,7 @@ class AdaptivePlanAPITests(unittest.TestCase):
     def test_delete_and_reset_before_first_close_still_preserve_receipt_evidence(self):
         self.plan()
         self.learn(4)
+        self.clock.return_value = date(2026, 9, 22)
         self.reset()
         self.db.delete(self.cards[self.chapters[0].id][0])
         self.db.commit()
@@ -247,12 +248,12 @@ class AdaptivePlanAPITests(unittest.TestCase):
         self.db.commit()
         reconcile_generated_plan(self.db, self.parent)
         self.db.commit()
-        self.assertEqual(self.db.scalar(select(StudyPlan)).revision, 1)
+        self.assertEqual(self.db.scalar(select(StudyPlan)).revision, 2)
         after = self.recalc()
         self.assertEqual(after["items"][0]["id"], before["items"][0]["id"])
         self.assertEqual(after["items"][0]["target_card_count"], before["items"][0]["target_card_count"])
 
-    def test_no_automatic_schedule_mutation_from_learning_or_get(self):
+    def test_unchanged_schedule_does_not_bump_revision_on_current_progress_or_get(self):
         original = self.plan()
         self.learn(4)
         body = self.client.get(self.url).json()
@@ -283,6 +284,7 @@ class AdaptivePlanAPITests(unittest.TestCase):
         self.db.commit()
         self.cards[first.id] = list(self.db.scalars(select(Card).where(Card.deck_id == first.id).order_by(Card.id)).all())
         self.plan()
+        self.clock.return_value = date(2026, 9, 22)
         self.learn(15)
         result = self.recalc()
         self.assertEqual((result["items"][0]["actual_learned_count"], result["items"][0]["target_card_count"]), (10, 10))

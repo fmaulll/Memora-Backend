@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "code": "study_plan_content_not_ready",
+    "message": "Finish chapter generation before recalculating from actual cards"
+  }
+}

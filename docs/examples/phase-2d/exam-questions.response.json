@@ -1,0 +1,17 @@
+{
+  "exam_id": "2b3bcad4-a85d-4cd3-b1e9-c219b085c524",
+  "exam_type": "first_half",
+  "question_count": 1,
+  "questions": [
+    {
+      "id": "66c02a34-89d8-4341-b53d-a5f0cb10eeac",
+      "position": 1,
+      "question_type": "true_false",
+      "question": "True?",
+      "options": [
+        "True",
+        "False"
+      ]
+    }
+  ]
+}

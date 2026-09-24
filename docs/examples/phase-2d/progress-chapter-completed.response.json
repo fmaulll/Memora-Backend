@@ -1,0 +1,119 @@
+{
+  "deck_id": "b6a5af8f-ccbe-4840-8a52-efbb5c6417d2",
+  "decks": [
+    {
+      "learned_card_count": 10,
+      "total_card_count": 10,
+      "completion_percentage": 100.0,
+      "completed": true,
+      "deck_id": "80cfa24c-14e6-4d7f-8d2d-b629f52f9b44",
+      "progress_epoch": "c454f650-317f-4663-8b5d-7ca539103c18",
+      "title": "Earlier",
+      "parent_deck_id": "b6a5af8f-ccbe-4840-8a52-efbb5c6417d2",
+      "position": 1,
+      "generation_status": "completed",
+      "cards": [
+        {
+          "card_id": "12078120-7a40-44bc-bad5-f30e430ba0cf",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "19824a2f-6e12-4860-a82c-742ae7c5782f",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "78bf251f-d819-44ad-9713-85f963cb9d00",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "9a9b580c-461d-4a72-b0ff-16c61181d804",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "a47bec9f-4cf3-49eb-9292-3412a7b7432e",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "b10b1a02-3a3d-473a-89a7-d8f711e345fe",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "bffee090-aee4-4d4f-888a-4226da3efc46",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "da73d6dc-139f-4ca6-bc4d-2dff5b0cd398",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "e467bd8d-c3d4-4cec-b22f-555fb56e58fb",
+          "learned_at": "2026-09-21T11:00:00Z"
+        },
+        {
+          "card_id": "fae51269-cb66-4169-9813-c79a04b05e5c",
+          "learned_at": "2026-09-21T11:00:00Z"
+        }
+      ]
+    },
+    {
+      "learned_card_count": 0,
+      "total_card_count": 10,
+      "completion_percentage": 0.0,
+      "completed": false,
+      "deck_id": "cc97dcb1-070a-4ee9-a1b1-074d9bf0dfb5",
+      "progress_epoch": "1cfb7692-7b7d-4fb6-b2b9-ee7ecd47f017",
+      "title": "Later",
+      "parent_deck_id": "b6a5af8f-ccbe-4840-8a52-efbb5c6417d2",
+      "position": 2,
+      "generation_status": "completed",
+      "cards": [
+        {
+          "card_id": "1e56b98d-7d5a-468f-b3fd-ca272198b865",
+          "learned_at": null
+        },
+        {
+          "card_id": "2d43227b-d03a-47a4-9101-5405495b1c83",
+          "learned_at": null
+        },
+        {
+          "card_id": "500c5cd4-e792-4a01-8514-b8ae1dedcd20",
+          "learned_at": null
+        },
+        {
+          "card_id": "535db142-d735-46ce-bfbe-2a654d422f5e",
+          "learned_at": null
+        },
+        {
+          "card_id": "7e46baa3-1501-4240-a173-d48eaa296b94",
+          "learned_at": null
+        },
+        {
+          "card_id": "7ebeb24f-c630-4168-a143-45ec84154d36",
+          "learned_at": null
+        },
+        {
+          "card_id": "cbe50a52-58ee-406a-90f4-bac65abc4caa",
+          "learned_at": null
+        },
+        {
+          "card_id": "e7a33903-4b26-4037-9ecc-58a79ba648a3",
+          "learned_at": null
+        },
+        {
+          "card_id": "f7b14b4d-f02e-4ee4-97e0-6a34baab7e02",
+          "learned_at": null
+        },
+        {
+          "card_id": "fed54ca3-c7e5-4b5d-8c44-21915772eaf3",
+          "learned_at": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_deck_count": 2,
+    "completed_deck_count": 1,
+    "learned_card_count": 10,
+    "total_card_count": 20
+  }
+}
